@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean:reports": "rm -rf cypress/reports/mochawesome && rm -f cypress/reports/mochawesome.json && rm -rf cypress/reports/report",
+    "cy:run-headless": "npx cypress run --headless --browser chrome",
+    "mochawesome:merge": "npx mochawesome-merge cypress/reports/mochawesome/*.json > cypress/reports/mochawesome.json",
+    "mochawesome:generate": "npx marge cypress/reports/mochawesome.json -f report -o cypress/reports/report --inline",
+    "cy:ci": "npm run clean:reports && (npm run cy:run-headless || exit 1) && npm run mochawesome:merge && npm run mochawesome:generate"
   },
   "keywords": [],
   "author": "",
@@ -18,5 +23,19 @@
     "mochawesome": "^7.1.3",
     "mochawesome-merge": "^5.0.0",
     "mochawesome-report-generator": "^6.2.0"
+  },
+  "cypress-cucumber-preprocessor": {
+    "stepDefinitions": "cypress/support/step_definitions/**/*.js",
+    "json": {
+      "enabled": false
+    },
+    "messages": {
+      "enabled": true
+    },
+    "html": {
+      "enabled": false
+    },
+    "filterSpecs": true,
+    "omitFiltered": true
   }
 }
