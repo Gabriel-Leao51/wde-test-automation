@@ -1,31 +1,17 @@
-# Nome amigável para o seu workflow, aparecerá na aba "Actions" do GitHub
 name: Cypress Tests CI
 
-# Controla quando o workflow será executado
 on:
-  # Executa em pushes para a branch 'main'
   push:
     branches: [main]
-  # Executa também quando uma Pull Request é aberta/atualizada para a branch 'main'
   pull_request:
     branches: [main]
 
-# Define os trabalhos (jobs) que o workflow realizará
 jobs:
-  # Nome do nosso único job por enquanto (pode ser qualquer nome)
   cypress-run:
-    # O tipo de máquina virtual onde o job será executado
-    # 'ubuntu-latest' é uma escolha comum e eficiente para projetos Node.js/Cypress
     runs-on: ubuntu-latest
 
-    # Container (opcional, mas útil para garantir ambiente consistente)
-    # Podemos adicionar isso depois se necessário, vamos começar simples.
-
-    # Passos sequenciais que o job executará
     steps:
       # Passo 1: Fazer o Checkout do Código
-      # 'uses' indica que estamos usando uma "Action" pré-construída do GitHub Marketplace
-      # 'actions/checkout@v4' é a action oficial para baixar o código do seu repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -34,45 +20,32 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          # Especifica a versão do Node.js que queremos usar.
-          # '20' se refere à versão LTS mais recente (recomendado).
-          # Se você usa uma versão diferente localmente, pode ajustar aqui.
           node-version: "20"
-          # Habilita o cache do npm para acelerar instalações futuras
-          cache: "npm"
 
-      # Passo 3: Instalar as Dependências do Projeto
-      # 'run' executa comandos diretamente no shell da máquina virtual
-      - name: Install dependencies
-        run: npm ci
-        # 'npm ci' é geralmente preferível a 'npm install' em CI.
-        # Ele faz uma instalação limpa baseada EXATAMENTE no seu arquivo 'package-lock.json',
-        # garantindo consistência e sendo mais rápido.
-        # IMPORTANTE: Certifique-se de que você tem um arquivo 'package-lock.json'
-        # commitado no seu repositório. Se não tiver, rode 'npm install' localmente
-        # uma vez para gerá-lo e depois commite o 'package-lock.json'.
+      # Passo 3: Limpar relatórios antigos (Boa prática antes da execução)
+      - name: Clean old reports
+        run: npm run clean:reports
 
-      # Passo 4: Executar os Testes Cypress
-      - name: Run Cypress tests and generate report
-        run: npm run cy:ci
-        # 'npx cypress run' executa todos os testes Cypress encontrados no projeto.
-        # Por padrão, ele roda em modo 'headless' (sem abrir o navegador visualmente),
-        # grava vídeos das execuções (em cypress/videos/) e tira screenshots
-        # em caso de falha (em cypress/screenshots/).
+      # Passo 4: Executar Testes Cypress usando a Action Oficial
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          command: npm run cy:run-headless
 
-      # Passo 5: Arquivar Artefatos (Relatórios, Vídeos, Screenshots)
+      # Passo 5: Gerar o Relatório HTML Cucumber (Mesmo se os testes falharem)
+      - name: Generate Cucumber HTML Report
+        if: always()
+        run: npm run cucumber:generate-html
+
+      # Passo 6: Arquivar Artefatos (Relatórios, Vídeos, Screenshots)
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v4
-        # Condição crucial: always() garante que este passo execute mesmo se
-        # o passo 'Run Cypress tests' falhar. Isso é essencial para
-        # podermos baixar os vídeos/screenshots e entender a falha.
+        # O passo de upload de artefatos deve ser executado mesmo que o teste falhe.
         if: always()
         with:
           # Nome que o pacote de artefatos terá na interface do GitHub
           name: cypress-execution-artifacts
           # Lista dos diretórios que queremos incluir no artefato.
-          # Certifique-se que estes são os locais onde o Cypress salva
-          # vídeos e screenshots no seu projeto.
           path: |
             cypress/videos
             cypress/screenshots

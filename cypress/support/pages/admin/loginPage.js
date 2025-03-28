@@ -60,7 +60,6 @@ class LoginPage {
 
   /**
    * Executa o fluxo completo de login: visita a página, preenche email/senha e clica no botão.
-   * (Mantém a chamada this.visit() dentro deste método, como no original).
    * @param {string} email - O email do usuário.
    * @param {string} password - A senha do usuário.
    * @returns {LoginPage} Instância da página para encadeamento.

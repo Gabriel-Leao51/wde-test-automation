@@ -1,11 +1,10 @@
 const report = require("multiple-cucumber-html-reporter");
 const path = require("path");
-const fs = require("fs-extra"); // Usado para ler metadados, se necessário
+const fs = require("fs-extra");
 
-const reportPath = path.resolve("cypress/reports/cucumber"); // Pasta onde o JSON e o HTML ficarão
-const jsonFile = path.join(reportPath, "cucumber-report.json"); // Caminho exato do JSON
+const reportPath = path.resolve("cypress/reports/cucumber");
+const jsonFile = path.join(reportPath, "cucumber-report.json");
 
-// Opcional: Ler metadados de um arquivo (ex: versão do browser, app, etc.)
 const metadataPath = path.join(reportPath, "metadata.json");
 let metadata = {};
 try {
@@ -17,34 +16,32 @@ try {
 }
 
 report.generate({
-  jsonDir: reportPath, // Diretório contendo o(s) arquivo(s) JSON do Cucumber
-  reportPath: reportPath, // Diretório onde o relatório HTML será salvo
+  jsonDir: reportPath,
+  reportPath: reportPath,
   metadata: {
     browser: {
-      name: "chrome", // Você pode tornar isso dinâmico se rodar em vários browsers
-      version: "Latest", // Exemplo
+      name: "chrome",
+      version: "Latest",
     },
     device: "GitHub Actions Runner",
     platform: {
-      name: "ubuntu", // Exemplo
-      // version: '...',
+      name: "ubuntu",
     },
   },
   customData: {
     title: "Run info",
     data: [
       { label: "Project", value: "WDE Shop E2E Tests" },
-      { label: "Release", value: "1.0.0" }, // Exemplo
+      { label: "Release", value: "1.0.0" },
       { label: "Cycle", value: "CI Execution" },
       { label: "Execution Start Time", value: new Date().toLocaleString() },
     ],
   },
-  reportName: "WDE Shop - Relatório de Testes BDD", // Título do Relatório HTML
-  pageTitle: "WDE Shop - Relatório BDD", // Título da Aba do Navegador
-  displayDuration: true, // Mostrar duração dos cenários/passos
-  // durationInMS: false, // Mostrar duração em ms (padrão é formatado)
-  hideMetadata: false, // Mostrar bloco de metadados
-  displayReportTime: true, // Mostrar hora de geração do relatório
+  reportName: "WDE Shop - Relatório de Testes BDD",
+  pageTitle: "WDE Shop - Relatório BDD",
+  displayDuration: true,
+  hideMetadata: false,
+  displayReportTime: true,
 });
 
 console.log(
