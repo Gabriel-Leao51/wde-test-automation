@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Cypress - Gerados em tempo de execução
+cypress/videos/
+cypress/screenshots/
+cypress/reports/
+
+# Arquivos de Log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
