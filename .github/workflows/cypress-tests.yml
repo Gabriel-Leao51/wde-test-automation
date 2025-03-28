@@ -63,7 +63,7 @@ jobs:
       # (Opcional - Adicionaremos depois se necessário)
       # Passo 5: Arquivar Artefatos (Relatórios, Vídeos, Screenshots)
       - name: Upload Cypress artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         # Condição crucial: always() garante que este passo execute mesmo se
         # o passo 'Run Cypress tests' falhar. Isso é essencial para
         # podermos baixar os vídeos/screenshots e entender a falha.
