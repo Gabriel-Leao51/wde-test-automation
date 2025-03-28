@@ -26,6 +26,7 @@ module.exports = defineConfig({
       json: true,
     },
     async setupNodeEvents(on, config) {
+      require("cypress-mochawesome-reporter/plugin")(on);
       await addCucumberPreprocessorPlugin(on, config);
 
       on(
@@ -34,8 +35,6 @@ module.exports = defineConfig({
           plugins: [createEsbuildPlugin(config)],
         })
       );
-
-      require("cypress-mochawesome-reporter/plugin")(on);
 
       return config;
     },
