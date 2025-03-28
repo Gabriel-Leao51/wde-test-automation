@@ -25,8 +25,7 @@ class LoginPage {
    * @returns {LoginPage} Instância da página para encadeamento.
    */
   visit() {
-    // Mantendo a URL hardcoded como no original
-    cy.visit("https://wde-5p3f.onrender.com/login");
+    cy.visit("/login");
     return this;
   }
 

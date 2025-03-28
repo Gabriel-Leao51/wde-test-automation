@@ -10,6 +10,8 @@ const {
 module.exports = defineConfig({
   e2e: {
     specPattern: "**/*.feature",
+    baseUrl: "https://wde-5p3f.onrender.com/",
+    pageLoadTimeout: 90000,
     async setupNodeEvents(on, config) {
       await addCucumberPreprocessorPlugin(on, config);
 
