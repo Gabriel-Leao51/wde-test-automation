@@ -76,5 +76,5 @@ jobs:
           path: |
             cypress/videos
             cypress/screenshots
-            cypress/reports/report/
+            cypress/reports/cucumber/
             retention-days: 7

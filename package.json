@@ -4,11 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean:reports": "rm -rf cypress/reports/mochawesome && rm -f cypress/reports/mochawesome.json && rm -rf cypress/reports/report",
+    "clean:reports": "rm -rf cypress/reports/cucumber",
     "cy:run-headless": "npx cypress run --headless --browser chrome",
-    "mochawesome:merge": "npx mochawesome-merge cypress/reports/mochawesome/*.json > cypress/reports/mochawesome.json",
+    "cucumber:generate-html": "node ./generate-cucumber-report.js",
     "mochawesome:generate": "npx marge cypress/reports/mochawesome.json -f report -o cypress/reports/report --inline",
-    "cy:ci": "npm run clean:reports && (npm run cy:run-headless || exit 1) && npm run mochawesome:merge && npm run mochawesome:generate"
+    "cy:ci": "npm run clean:reports && mkdir -p cypress/reports/cucumber && (npm run cy:run-headless || exit 1) && npm run cucumber:generate-html"
   },
   "keywords": [],
   "author": "",
@@ -19,15 +19,13 @@
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.4",
     "cypress": "^14.2.0",
     "cypress-cucumber-preprocessor": "^4.3.1",
-    "cypress-mochawesome-reporter": "^3.8.2",
-    "mochawesome": "^7.1.3",
-    "mochawesome-merge": "^5.0.0",
-    "mochawesome-report-generator": "^6.2.0"
+    "multiple-cucumber-html-reporter": "^3.9.2"
   },
   "cypress-cucumber-preprocessor": {
     "stepDefinitions": "cypress/support/step_definitions/**/*.js",
     "json": {
-      "enabled": false
+      "enabled": true,
+      "output": "cypress/reports/cucumber/cucumber-report.json"
     },
     "messages": {
       "enabled": true
