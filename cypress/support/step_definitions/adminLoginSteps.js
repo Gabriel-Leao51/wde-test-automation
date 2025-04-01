@@ -4,7 +4,7 @@ import loginPage from "../pages/admin/loginPage";
 let adminCredentials;
 
 before(() => {
-  cy.fixture("admin_credentials.json").then((data) => {
+  cy.fixture("users.json").then((data) => {
     adminCredentials = data;
   });
 });

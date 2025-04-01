@@ -6,7 +6,7 @@ Funcionalidade: Gerenciar Pedidos - Painel Administrativo
     Para manter o controle de vendas da loja atualizado
 
     Contexto:
-        Dado que eu estou logado como um administrador
+        Dado que eu estou logado como "admin"
         E eu navego para a pagina de gerenciamento de pedidos
 
     @crud @order @happy-path

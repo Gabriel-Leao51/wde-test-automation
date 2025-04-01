@@ -6,5 +6,10 @@
   "invalidAdmin": {
     "email": "invalid@test.com",
     "password": "wrongpassword"
+  },
+  "cliente": {
+    "email": "user@example.com",
+    "password": "usertest",
+    "name": "Usuário Teste Cliente"
   }
 }

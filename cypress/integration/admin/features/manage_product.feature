@@ -6,7 +6,7 @@ Funcionalidade: Gerenciar Produtos - Painel Administrativo
     Para manter o catalogo da loja atualizado
 
     Contexto:
-        Dado que eu estou logado como um administrador
+        Dado que eu estou logado como "admin"
         E eu estou na pagina inicial do painel administrativo "/products"
         Quando eu navego para a pagina de gerenciamento de produtos "Manage Products"
 
