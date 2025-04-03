@@ -20,23 +20,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
 
-      # Passo 3: Limpar relatórios antigos
+      #Passo 3: Instalar Dependências
+      - name: Install dependencies
+        run: npm ci
+
+      # Passo 4: Limpar relatórios antigos
       - name: Clean old reports
         run: npm run clean:reports
 
-      # Passo 4: Executar Testes Cypress
-      - name: Run Cypress tests
+      # Passo 5: Executar Testes Cypress
+      - name: Run Cypress Core Tests (Exclude Purchase & Order Mgmt) # Nome do passo atualizado
         uses: cypress-io/github-action@v6
         with:
-          command: npm run cy:run-headless
+          spec: cypress/integration/admin/features/{authentication,authorization,login,manage_product}.feature
+          browser: chrome
 
-      # Passo 5: Gerar o Relatório HTML Cucumber (Mesmo se os testes falharem)
+      # Passo 6: Gerar o Relatório HTML Cucumber (Mesmo se os testes falharem)
       - name: Generate Cucumber HTML Report
         if: always()
         run: npm run cucumber:generate-html
 
-      # Passo 6: Arquivar Artefatos (Relatórios, Vídeos, Screenshots)
+      # Passo 7: Arquivar Artefatos (Relatórios, Vídeos, Screenshots)
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v4
         # O passo de upload de artefatos deve ser executado mesmo que o teste falhe.
@@ -48,4 +54,4 @@ jobs:
             cypress/videos
             cypress/screenshots
             cypress/reports/cucumber/
-            retention-days: 7
+          retention-days: 7

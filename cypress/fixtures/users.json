@@ -8,8 +8,8 @@
     "password": "wrongpassword"
   },
   "cliente": {
-    "email": "user@example.com",
+    "email": "user2@example.com",
     "password": "usertest",
-    "name": "Usuário Teste Cliente"
+    "name": "User B"
   }
 }
