@@ -41,6 +41,7 @@ O projeto abrange diferentes áreas e tipos de testes:
 
 O projeto segue uma estrutura organizada para facilitar a manutenção e escalabilidade:
 
+```
 /cypress
 ├── fixtures/ # Massa de dados (users.json, product_image.jpg, etc.)
 ├── integration/ # Arquivos de features BDD (.feature)
@@ -62,6 +63,8 @@ evidence/ #screenshots e vídeos comprovando o comportamento inesperado
 generate-cucumber-report.js # Script Node.js para gerar o relatório HTML
 cypress.config.js # Arquivo de configuração principal do Cypress
 package.json # Dependências e scripts do projeto
+
+```
 
 ## 5. Pré-requisitos
 
@@ -144,7 +147,7 @@ Descrição: Usuários autenticados com o perfil "cliente" conseguem acessar dir
 
 Comprovação: Os testes automatizados em authorization.feature falham intencionalmente ao tentar acessar essas páginas como cliente, confirmando a vulnerabilidade.
 
-Relatório Detalhado: (docs/bugs/BUG-AUTH-001.md)
+Relatório Detalhado: [BUG-AUTH-001 Report](docs/bugs/BUG-AUTH-001.md)
 
 BUG-AUTH-002: Falha de Autorização e Vazamento de Informação na Página de Pedidos
 
@@ -152,7 +155,7 @@ Descrição: Usuários autenticados como "cliente" conseguem acessar a URL /admi
 
 Comprovação: O teste automatizado em authorization.feature para /admin/orders não resulta em um redirecionamento esperado (401/403), e a verificação manual confirmou o acesso indevido a dados de outros usuários.
 
-Relatório Detalhado: (docs/bugs/BUG-AUTH-002.md)
+Relatório Detalhado: [BUG-AUTH-002 Report](docs/bugs/BUG-AUTH-002.md)
 
 ## 10. Desafios e Decisões Chave
 

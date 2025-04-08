@@ -59,11 +59,11 @@ O usuário com perfil `cliente` **não deve** conseguir acessar ou visualizar qu
 - **Teste Automatizado (`authorization.feature`):** O cenário correspondente demonstra o acesso indevido à URL `/admin/orders` pelo perfil `cliente` (o teste pode falhar na asserção de redirecionamento esperado ou validar um status code incorreto). A _asserção específica de vazamento_ de dados de outros usuários não foi automatizada.
 - **Geração de Dados:** O teste E2E `purchase_flow.feature` foi utilizado para criar um pedido de teste conhecido para um usuário `cliente`.
 - **Verificação Manual:** Confirmação visual realizada acessando `/admin/orders` como outro usuário (`cliente` ou `admin`) após a geração do pedido de teste, observando a presença de pedidos não pertencentes ao usuário logado.
-- **Screenshots/Vídeos:** `[![Painel Admin Acessado (BUG-AUTH-002)](evidence/BUG-AUTH-002-Admin-panel.png)
-![Vazamento de Dados (Pedidos de Outros) (BUG-AUTH-002)](evidence/BUG-AUTH-002-Data-leak.png)
-![Comportamento Esperado (Ex: Erro 403) (BUG-AUTH-002)](evidence/BUG-AUTH-002-Expected-behavior.png)
-[Vídeo da Execução dos Testes de Autorização](evidence/authorization.feature.mp4)]` - Screenshots/vídeos da página `/admin/orders` acessada pelo `cliente`, destacando a presença de pedidos de outros usuários.
-- **Link do CI/CD:** `[Link para a execução relevante no GitHub Actions, se aplicável]` - Execução mostrando a execução dos testes de autorização.
+- **Screenshots/Vídeos:**
+  - ![Painel Admin Acessado (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Admin-panel.png)
+  - ![Vazamento de Dados (Pedidos de Outros) (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Data-leak.png)
+  - ![Comportamento Esperado (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Expected-behavior.png)
+  - [Vídeo da Execução dos Testes de Autorização](../../evidence/authorization.feature.mp4)
 
 ## Notas Adicionais / Ação Recomendada
 

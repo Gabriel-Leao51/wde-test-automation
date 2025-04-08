@@ -58,10 +58,11 @@
 
 - **Teste Automatizado (`authorization.feature`):** Os cenários correspondentes falham intencionalmente ao tentar acessar as URLs como `cliente`, comprovando a falha de redirecionamento/bloqueio esperado.
 - **Verificação Manual:** Acesso direto às URLs confirma a renderização das páginas administrativas para o perfil `cliente` e a capacidade de interação com os formulários.
-- **Screenshots/Vídeos:** `[![Painel Admin Exposto (BUG-AUTH-001)](evidence/BUG-AUTH-001-Admin-panel-exposed.png)
-![Formulário de Adição de Produto Exposto](evidence/BUG-AUTH-001-Add-product-form-exposed.png)
-![Formulário de Edição Exposto (BUG-AUTH-001)](evidence/BUG-AUTH-001-Edit-product-form-exposed.png)
-[Vídeo da Execução dos Testes de Autorização](evidence/authorization.feature.mp4)]` - Screenshots/vídeos mostrando o acesso do cliente aos formulários de admin e, idealmente, a confirmação de uma adição/edição bem-sucedida.
+- **Screenshots/Vídeos:**
+  - ![Painel Admin Exposto (BUG-AUTH-001)](../../evidence/BUG-AUTH-001-Admin-panel-exposed.png)
+  - ![Formulário de Adição de Produto Exposto](../../evidence/BUG-AUTH-001-Add-product-form-exposed.png)
+  - ![Formulário de Edição Exposto (BUG-AUTH-001)](../../evidence/BUG-AUTH-001-Edit-product-form-exposed.png)
+  - [Vídeo da Execução dos Testes de Autorização](../../evidence/authorization.feature.mp4) - Screenshots/vídeos mostrando o acesso do cliente aos formulários de admin e, idealmente, a confirmação de uma adição/edição bem-sucedida.
 
 ## Análise de Causa Raiz (Provável)
 
