@@ -26,7 +26,10 @@ class ProductsPage {
     productDescriptionInput: () => cy.get("#description"),
 
     /** Botão 'Save' no formulário de criação/edição de produto. */
-    saveButton: () => cy.contains(".btn", "Save"), // Ajuste se o seletor for diferente
+    saveButton: () => cy.contains(".btn", "Save"),
+
+    /** Botão 'Add to Cart na página de detalhes do produto */
+    addToCartButton: () => cy.contains(".btn", "Add to Cart"),
 
     /**
      * Obtém o elemento container principal de um item na lista de produtos, buscando pelo título.
@@ -76,6 +79,18 @@ class ProductsPage {
         .contains("h2", productTitle) // Encontra o H2 com o título
         .siblings(".product-item-actions") // Vai para o container de ações irmão
         .find('button:contains("Delete")'), // Encontra o botão delete dentro das ações
+
+    /**
+     * Obtém o botão 'View Details' para um produto específico na lista.
+     * A implementação atual busca pelo texto do título (h2) e navega para os botões irmãos.
+     * @param {string} productTitle - O título do produto.
+     * @returns {Cypress.Chainable<JQuery<HTMLButtonElement>>} - O elemento do botão 'Delete'.
+     */
+    viewDetailsButton: (productTitle) =>
+      cy
+        .contains("h2", productTitle) // Encontra o H2 com o título
+        .siblings(".product-item-actions") // Vai para o container de ações irmão
+        .find('a:contains("View Details")'), // Encontra o link de detalhes dentro das ações
   };
 
   // --- Ações ---
@@ -215,6 +230,27 @@ class ProductsPage {
         cy.get(`button[data-productid="${productId}"]`).click();
       });
     return this; // Retorna imediatamente, a espera pela request fica no step definition
+  }
+
+  /**
+   * Clica no botão 'View Details' de um produto específico na lista.
+   * @param {string} productTitle - O título do produto a ser editado.
+   * @returns {ProductsPage} Instância da página para encadeamento.
+   */
+  clickViewDetailsButton(productTitle) {
+    this.elements.viewDetailsButton(productTitle).should("be.visible").click();
+    cy.contains("h1", productTitle); // Verifica se foi para a página de detalhes do produto correto
+    return this;
+  }
+
+  /**
+   * Clica no botão 'Add to Cart' de um produto específico na lista.
+   * @param {string} productTitle - O título do produto a ser editado.
+   * @returns {ProductsPage} Instância da página para encadeamento.
+   */
+  clickAddToCartButton() {
+    this.elements.addToCartButton().should("be.visible").click();
+    return this;
   }
 
   // --- Asserções ---

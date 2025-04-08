@@ -1,6 +1,6 @@
 import { When, Then } from "@badeball/cypress-cucumber-preprocessor";
-import productsPage from "../pages/admin/productsPage";
-import { formatProductData } from "../pages/helpers";
+import productsPage from "../pages/productsPage";
+import { formatProductData } from "../../utils/helpers";
 
 When(
   "eu estou na pagina inicial do painel administrativo {string}",

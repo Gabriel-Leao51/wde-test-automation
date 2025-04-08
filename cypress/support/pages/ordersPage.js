@@ -48,6 +48,12 @@ class OrdersPage {
      */
     statusBadge: (orderContainerElement) =>
       cy.wrap(orderContainerElement).find("span.badge"),
+
+    /**
+     * O contêiner principal do pedido mais recente na lista do cliente.
+     * Assumindo que o mais recente é o primeiro da lista.
+     */
+    mostRecentOrderItem: () => cy.get(".order-item").first(),
   };
 
   // --- Ações ---

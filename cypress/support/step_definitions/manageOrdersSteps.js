@@ -1,5 +1,5 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
-import ordersPage from "../pages/admin/ordersPage";
+import ordersPage from "../pages/ordersPage";
 
 // --- Contexto ---
 

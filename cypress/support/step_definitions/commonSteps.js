@@ -1,5 +1,5 @@
 import { Given } from "@badeball/cypress-cucumber-preprocessor";
-import loginPage from "../pages/admin/loginPage";
+import loginPage from "../pages/loginPage";
 
 Given("que eu estou logado como {string}", (userType) => {
   const userRole = userType.toLowerCase();

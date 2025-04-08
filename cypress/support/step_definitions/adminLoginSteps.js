@@ -1,5 +1,5 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
-import loginPage from "../pages/admin/loginPage";
+import loginPage from "../pages/loginPage";
 
 let adminCredentials;
 
