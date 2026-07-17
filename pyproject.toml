@@ -1,0 +1,28 @@
+[project]
+name = "wde-automacao"
+version = "0.1.0"
+description = "Suite de testes E2E (Playwright + pytest-bdd) para a WDE Shop"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=9.1.1",
+    "pytest-bdd>=8.1.0",
+    "pytest-html>=4.2.0",
+    "pytest-playwright>=0.8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["steps"]
+bdd_features_base_dir = "features"
+addopts = "--tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure --html=playwright-report/report.html --self-contained-html"
+markers = [
+    "auth: cenários de autenticação/autorização",
+    "login-admin: cenários de login administrativo",
+    "happy-path: caminho feliz",
+    "negative-case: caso negativo (variante 1, usada em login.feature)",
+    "negative-path: caso negativo (variante 2, usada em manage_product.feature)",
+    "crud: operações de CRUD",
+    "product: cenários relacionados a produtos",
+    "order: cenários relacionados a pedidos",
+    "validation: cenários de validação de formulário",
+]
