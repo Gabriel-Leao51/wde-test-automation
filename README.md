@@ -107,7 +107,17 @@ Adicione `--slowmo=400` (valor em ms) para desacelerar as ações e facilitar a 
 uv run pytest steps/test_manage_product_steps.py
 ```
 
-### 7.4. Apontando para outro ambiente
+### 7.4. Execução paralela
+
+```bash
+uv run pytest -n 4
+```
+
+Usa [`pytest-xdist`](https://pytest-xdist.readthedocs.io/). Os 3 primeiros cenários de `manage_product.feature` (adicionar, editar, excluir) são interdependentes — operam sobre o mesmo produto em sequência — então carregam a tag `@xdist_group_product_crud`, que os fixa no mesmo worker (via `--dist=loadgroup`, já configurado em `pyproject.toml`, e o hook `pytest_bdd_apply_tag` em `conftest.py`). O 4º cenário (validação de campo obrigatório) é independente e não precisa da tag. O resto da suíte paraleliza livremente entre os demais workers.
+
+`-n 4` é um teto deliberado, não `-n auto`: a WDE Shop roda como um único processo Node/Express + uma única instância MongoDB, sem escalonamento. Em testes locais, `-n auto` (usando todos os cores da máquina) gerou falhas intermitentes por timeout sob carga — o app simplesmente não responde rápido o suficiente com muitas sessões simultâneas. `-n 4` rodou de forma consistente em múltiplas execuções.
+
+### 7.6. Apontando para outro ambiente
 
 Por padrão a suíte aponta para `http://localhost:3000`. Para rodar contra outra URL:
 
@@ -115,7 +125,7 @@ Por padrão a suíte aponta para `http://localhost:3000`. Para rodar contra outr
 WDE_BASE_URL=http://outro-host:3000 uv run pytest
 ```
 
-### 7.5. Relatórios e artefatos de falha
+### 7.7. Relatórios e artefatos de falha
 
 Cada execução gera um relatório HTML autocontido em `playwright-report/report.html`. Falhas retêm automaticamente trace, vídeo e screenshot em `test-results/`, recuperáveis para depuração local:
 
@@ -131,7 +141,7 @@ O workflow está configurado em `.github/workflows/playwright-tests.yml` e reali
 - **Ambiente:** Ubuntu com Python 3.12 (via `uv`) e Docker.
 - **Aplicação alvo:** Faz checkout do repositório `wde` como um diretório irmão e sobe a stack via `docker compose up -d --build`, aguardando o health check antes de prosseguir.
 - **Instalação:** `uv sync` + `playwright install --with-deps chromium`.
-- **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
+- **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`) em paralelo com `-n 4` (ver seção 7.4). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
 - **Bugs conhecidos como `@xfail`:** Os 3 cenários de `authorization.feature` que documentam `BUG-AUTH-001`/`BUG-AUTH-002` são marcados com a tag `@xfail` (com `xfail_strict` habilitado). Isso permite que o pipeline reporte sucesso normalmente enquanto continua executando e rastreando esses cenários — se algum dos bugs for corrigido, o cenário correspondente passa a `XPASS` e quebra o build, sinalizando a regressão em vez de passar despercebida.
 - **Upload do Artefato:** Disponibiliza o relatório HTML e os artefatos de falha (`playwright-report/`, `test-results/`) como artefato do build no GitHub Actions.
 

@@ -18,4 +18,4 @@ def logged_in_as(user_type, login_as, page):
     login_as(user_type)
 
     if user_type.lower() == "cliente":
-        expect(page.get_by_role("link", name="Orders")).to_be_visible()
+        expect(page.locator("#main-header").get_by_role("link", name="Orders")).to_be_visible()

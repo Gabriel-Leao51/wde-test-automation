@@ -59,13 +59,22 @@ jobs:
         env:
           WDE_BASE_URL: http://localhost:3000
         run: >
-          uv run pytest
+          uv run pytest -n 4
           steps/test_admin_login_steps.py
           steps/test_security_steps.py
           steps/test_manage_product_steps.py
         # Note: manage_orders.feature and purchase_flow.feature are intentionally excluded
         # from CI, same rationale as the original Cypress pipeline: they create persistent
         # orders in the database on every run.
+        #
+        # -n 4: parallel execution via pytest-xdist. The manage_product.feature CRUD chain
+        # (add/edit/delete/validate) is tagged @xdist_group_product_crud so it always lands
+        # on one worker and keeps running in order (see conftest.py's pytest_bdd_apply_tag
+        # hook + --dist=loadgroup in pyproject.toml). 4 workers is a deliberate cap, not
+        # "-n auto": the WDE app is a single Node/Express process + single MongoDB instance
+        # with no scaling, and higher worker counts were observed to intermittently exceed
+        # default assertion timeouts under load (verified locally: -n 4 passed reliably
+        # across repeated runs, -n auto with 12 workers did not).
 
       - name: Upload Playwright artifacts
         if: always()

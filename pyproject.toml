@@ -9,12 +9,13 @@ dependencies = [
     "pytest-bdd>=8.1.0",
     "pytest-html>=4.2.0",
     "pytest-playwright>=0.8.0",
+    "pytest-xdist>=3.8.0",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["steps"]
 bdd_features_base_dir = "features"
-addopts = "--tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure --html=playwright-report/report.html --self-contained-html"
+addopts = "--tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure --html=playwright-report/report.html --self-contained-html --dist=loadgroup"
 xfail_strict = true
 markers = [
     "auth: cenários de autenticação/autorização",

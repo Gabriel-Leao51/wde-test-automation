@@ -12,6 +12,20 @@ from pages.products_page import ProductsPage
 TEST_DATA_DIR = Path(__file__).resolve().parent / "test_data"
 
 
+def pytest_bdd_apply_tag(tag, function):
+    """Maps Gherkin tags to pytest-xdist grouping, so interdependent scenarios
+    (e.g. the add/edit/delete/validate CRUD chain in manage_product.feature)
+    always land on the same xdist worker and keep running in order, even
+    though the rest of the suite is free to parallelize across workers.
+
+    Falls through to pytest-bdd's default tag handling (getattr(pytest.mark, tag))
+    for every other tag.
+    """
+    if tag == "xdist_group_product_crud":
+        return pytest.mark.xdist_group(name="product_crud")(function)
+    return None
+
+
 @pytest.fixture(scope="session")
 def base_url():
     """Overrides pytest-playwright's base_url fixture.

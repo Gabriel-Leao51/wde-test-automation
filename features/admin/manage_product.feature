@@ -10,7 +10,7 @@ Funcionalidade: Gerenciar Produtos - Painel Administrativo
         E eu estou na pagina inicial do painel administrativo "/products"
         Quando eu navego para a pagina de gerenciamento de produtos "Manage Products"
 
-    @crud @product @happy-path
+    @crud @product @happy-path @xdist_group_product_crud
     Cenario: Adicionar um novo produto com sucesso
         Quando eu clico no botao "Add Product"
         E eu preencho o formulario de adicionar produto com os seguintes dados:
@@ -24,7 +24,7 @@ Funcionalidade: Gerenciar Produtos - Painel Administrativo
         Entao eu devo ser redirecionado para a pagina de gerenciamento de produtos "/admin/products"
         E o produto "Mousepad Teste" deve estar visivel na listagem de produtos com titulo e imagem
 
-    @crud @product @happy-path
+    @crud @product @happy-path @xdist_group_product_crud
     Cenario: Editar um produto existente com sucesso
         Quando eu clico no botao "View & Edit" para o produto de titulo "Mousepad Teste"
         E eu preencho o formulario de edição de produto com os seguintes dados:
@@ -37,7 +37,7 @@ Funcionalidade: Gerenciar Produtos - Painel Administrativo
         Entao eu devo ser redirecionado para a pagina de gerenciamento de produtos "/admin/products"
         E o produto "Mousepad Teste Editado" deve ser exibido na listagem de produtos com o titulo atualizado
 
-    @crud @product @happy-path
+    @crud @product @happy-path @xdist_group_product_crud
     Cenario: Excluir um produto existente com sucesso
         Quando eu clico no botao "Delete" para o produto de titulo "Mousepad Teste Editado"
         Entao o produto "Mousepad Teste Editado" não deve ser mais exibido na listagem de produtos

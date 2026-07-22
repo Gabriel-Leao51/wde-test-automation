@@ -36,13 +36,14 @@ def assert_redirected_to_admin_home(page):
 
 @then(parsers.parse('eu devo ver as opcoes de menu "{manage_products}" e "{manage_orders}"'))
 def assert_menu_options_visible(page, manage_products, manage_orders):
-    expect(page.get_by_role("link", name=manage_products)).to_be_visible()
-    expect(page.get_by_role("link", name=manage_orders)).to_be_visible()
+    header = page.locator("#main-header")
+    expect(header.get_by_role("link", name=manage_products)).to_be_visible()
+    expect(header.get_by_role("link", name=manage_orders)).to_be_visible()
 
 
 @then(parsers.parse('eu devo ver o botao "{logout_text}" no cabecalho'))
 def assert_logout_button_visible(page, logout_text):
-    expect(page.get_by_role("button", name=logout_text)).to_be_visible()
+    expect(page.locator("#main-header").get_by_role("button", name=logout_text)).to_be_visible()
 
 
 # --- Cenário: Login administrativo falha - Credenciais invalidas ---
