@@ -1,12 +1,14 @@
 # Automação de Testes (Portfólio QA) - WDE Shop
 
-![Status CI](https://github.com/Gabriel-Leao51/wde-test-automation/actions/workflows/cypress-tests.yml/badge.svg)
+![Status CI](https://github.com/Gabriel-Leao51/wde-test-automation/actions/workflows/playwright-tests.yml/badge.svg)
 
 ## 1. Introdução
 
 Este repositório contém um projeto de automação de testes E2E (End-to-End) desenvolvido como parte de um portfólio de Quality Assurance (QA). O objetivo principal foi construir uma suíte de testes robusta utilizando tecnologias modernas e boas práticas de mercado, demonstrando habilidades em automação, BDD, CI/CD e identificação de bugs.
 
-A aplicação alvo (AUT - Application Under Test) é a **WDE Shop**, um e-commerce fictício hospedado em: `https://wde-5p3f.onrender.com`.
+A aplicação alvo (AUT - Application Under Test) é a **WDE Shop** ([repositório](https://github.com/Gabriel-Leao51/wde)), rodando localmente via Docker Compose (app + MongoDB), substituindo o deploy anteriormente hospedado no Render.
+
+> Este projeto começou como uma suíte em **Cypress + Cucumber (JavaScript)** e foi migrado para **Playwright + pytest-bdd (Python)**. A suíte original em Cypress permanece preservada e consultável na branch [`legacy-cypress`](https://github.com/Gabriel-Leao51/wde-test-automation/tree/legacy-cypress). Detalhes da migração (decisões, fases, mapeamento Cypress → Playwright) estão em [ROADMAP.md](ROADMAP.md).
 
 ## 2. Escopo da Automação
 
@@ -21,166 +23,158 @@ O projeto abrange diferentes áreas e tipos de testes:
   - **Autenticação:** Tentativas de acesso a áreas administrativas por usuários não logados.
   - **Autorização:** Tentativas de acesso a áreas administrativas por usuários logados com perfil de "cliente" (não autorizado).
 - **Teste E2E (Fluxo do Cliente):**
-  - **Jornada de Compra:** Login do cliente, busca de produto, adição ao carrinho, visualização do carrinho e redirecionamento para a página de pagamento (Stripe).
+  - **Jornada de Compra:** Login do cliente, busca de produto, adição ao carrinho, checkout e redirecionamento completo até a página de pagamento (Stripe).
 
 ## 3. Tecnologias e Metodologias Utilizadas
 
-- **Framework de Automação:** [Cypress](https://www.cypress.io/)
-- **Linguagem:** JavaScript (Node.js)
-- **Abordagem BDD:** Gherkin (PT-BR) com [Cucumber](https://cucumber.io/) via `@badeball/cypress-cucumber-preprocessor`
+- **Framework de Automação:** [Playwright](https://playwright.dev/python/) (Python, API síncrona)
+- **Linguagem:** Python 3.12
+- **Abordagem BDD:** Gherkin (PT-BR) via [pytest-bdd](https://pytest-bdd.readthedocs.io/)
 - **Padrão de Projeto:** Page Object Model (POM)
+- **Gerenciador de Pacotes:** [uv](https://docs.astral.sh/uv/)
 - **CI/CD:** GitHub Actions
-- **Relatórios:** `multiple-cucumber-html-reporter` (Relatório BDD em HTML)
-- **Gerenciamento de Dados:** Cypress Fixtures (.json para dados de teste, .jpg para uploads)
-- **Seletores e Interação Cypress:** Seletores CSS (`cy.get`, `cy.contains`), Comandos de Interação (`cy.click`, `cy.type`), Interceptação de Rede (`cy.intercept`, `cy.wait`), Asserções (`cy.should`), Manipulação de URL/Navegação (`cy.visit`, `cy.url`), Interação Cross-Origin (`cy.origin`)
-- **Bundler/Pré-processador:** ESBuild (via `@bahmutov/cypress-esbuild-preprocessor`)
-- **Gerenciador de Pacotes:** npm
+- **Relatórios:** `pytest-html` (relatório HTML autocontido), trace/vídeo/screenshot do Playwright retidos em falhas
+- **Gerenciamento de Dados:** Fixtures JSON (`test_data/`) para usuários e pedidos, imagem de teste para upload
+- **Aplicação alvo local:** Docker Compose ([repositório `wde`](https://github.com/Gabriel-Leao51/wde)) — app + MongoDB, com seed automático de dados
 - **Controle de Versão:** Git / GitHub
 
 ## 4. Estrutura do Projeto
 
-O projeto segue uma estrutura organizada para facilitar a manutenção e escalabilidade:
-
 ```
-/cypress
-├── fixtures/ # Massa de dados (users.json, product_image.jpg, etc.)
-├── integration/ # Arquivos de features BDD (.feature)
-│ ├── admin/features # Features relacionadas ao painel admin
-│ └── client/features # Features relacionadas à loja do cliente
-├── pages/ # Page Objects (LoginPage.js, ProductsPage.js, etc.) - POM Unificado
-├── support/
-│ ├── commands.js # Comandos customizados do Cypress
-│ ├── e2e.js # Arquivo de configuração principal do Cypress
-│ └── step_definitions/ # Implementação dos steps Gherkin (common_steps.js, etc.) - Steps Unificados
-├── utils/ # Funções auxiliares, gerenciadas separadamente para legibilidade e manutenibilidade
-│
-.github/
-└── workflows/ # Arquivos de workflow do GitHub Actions
-└──cypress-tests.yml
-docs/
-└──bugs/ #relatórios dos bugs encontrados
-evidence/ #screenshots e vídeos comprovando o comportamento inesperado
-generate-cucumber-report.js # Script Node.js para gerar o relatório HTML
-cypress.config.js # Arquivo de configuração principal do Cypress
-package.json # Dependências e scripts do projeto
-
+.
+├── pyproject.toml              # Dependências e configuração do pytest (uv)
+├── uv.lock
+├── conftest.py                 # base_url, fixtures de Page Objects e login
+├── features/
+│   ├── admin/                  # Features de login, autenticação, autorização, produtos, pedidos
+│   └── client/                 # Feature do fluxo de compra
+├── steps/                      # Step definitions (pytest-bdd) + conftest.py com steps compartilhados
+├── pages/                      # Page Objects (LoginPage, ProductsPage, CartPage, OrdersPage)
+├── test_data/                  # Fixtures de dados (users.json, orders.json, mousepad.jpg)
+├── utils/                      # Funções auxiliares (helpers.py)
+├── docs/bugs/                  # Relatórios dos bugs encontrados
+├── evidence/                   # Screenshots e vídeos comprovando o comportamento inesperado
+├── .github/workflows/
+│   └── playwright-tests.yml
+└── ROADMAP.md                  # Roadmap e histórico da migração Cypress → Playwright
 ```
 
 ## 5. Pré-requisitos
 
-- [Node.js](https://nodejs.org/) (Versão 20.x ou superior recomendada)
-- [npm](https://www.npmjs.com/) (geralmente instalado com o Node.js)
+- [Python](https://www.python.org/) 3.12+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para rodar a aplicação alvo localmente)
 - [Git](https://git-scm.com/)
 
 ## 6. Instalação
 
-1.  Clone o repositório:
-    ```bash
-    git clone https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-    cd SEU_REPOSITORIO
-    ```
-2.  Instale as dependências do projeto:
-    ```bash
-    npm ci
-    ```
-    _(Use `npm ci` para garantir a instalação exata das versões definidas no `package-lock.json`)_
+1. Clone os dois repositórios (a aplicação alvo e a suíte de testes):
+
+   ```bash
+   git clone https://github.com/Gabriel-Leao51/wde.git
+   git clone https://github.com/Gabriel-Leao51/wde-test-automation.git
+   ```
+
+2. Suba a aplicação WDE Shop localmente (veja o [README do repositório `wde`](https://github.com/Gabriel-Leao51/wde#-rodando-localmente-com-docker) para detalhes — resumindo: `cp .env.example .env`, preencher `STRIPE_KEY`, e `docker compose up --build`). A aplicação sobe em `http://localhost:3000`, já com dados de teste populados pelo seed.
+
+3. Instale as dependências da suíte de testes:
+
+   ```bash
+   cd wde-test-automation
+   uv sync
+   uv run playwright install --with-deps chromium
+   ```
 
 ## 7. Execução dos Testes
 
-### 7.1. Execução Interativa (Cypress Test Runner)
-
-Ideal para desenvolvimento e depuração:
+### 7.1. Suíte completa
 
 ```bash
-npx cypress open
+uv run pytest
 ```
 
-Selecione o navegador e o arquivo .feature que deseja executar.
+### 7.2. Modo headed (com navegador visível)
 
-### 7.2. Execução Headless (Linha de Comando)
+```bash
+uv run pytest --headed
+```
 
-Executa todos os testes definidos na configuração (ou via parâmetro --spec) em modo headless:
+Adicione `--slowmo=400` (valor em ms) para desacelerar as ações e facilitar a observação visual.
 
-npx cypress run
+### 7.3. Um arquivo específico
 
-Para executar um conjunto específico de features (ex: apenas testes de admin):
+```bash
+uv run pytest steps/test_manage_product_steps.py
+```
 
-npx cypress run --spec "cypress/integration/admin/features/\*_/_.feature"
+### 7.4. Apontando para outro ambiente
 
-### 7.3. Geração do Relatório BDD HTML
+Por padrão a suíte aponta para `http://localhost:3000`. Para rodar contra outra URL:
 
-Após a execução dos testes (via npx cypress run que gera os arquivos JSON do Cucumber), execute o script para gerar o relatório HTML:
+```bash
+WDE_BASE_URL=http://outro-host:3000 uv run pytest
+```
 
-node generate-cucumber-report.js
+### 7.5. Relatórios e artefatos de falha
 
-O relatório será gerado em reports/cucumber-html-report.html.
+Cada execução gera um relatório HTML autocontido em `playwright-report/report.html`. Falhas retêm automaticamente trace, vídeo e screenshot em `test-results/`, recuperáveis para depuração local:
+
+```bash
+uv run playwright show-trace test-results/<pasta-do-teste>/trace.zip
+```
 
 ## 8. Integração Contínua (CI/CD) com GitHub Actions
 
-Este projeto utiliza GitHub Actions para integração contínua. O workflow está configurado em .github/workflows/cypress-tests.yml e realiza as seguintes etapas:
+O workflow está configurado em `.github/workflows/playwright-tests.yml` e realiza as seguintes etapas:
 
-Gatilhos: Executado em eventos de push e pull_request na branch main.
+- **Gatilhos:** Executado em eventos de `push` e `pull_request` na branch `main`.
+- **Ambiente:** Ubuntu com Python 3.12 (via `uv`) e Docker.
+- **Aplicação alvo:** Faz checkout do repositório `wde` como um diretório irmão e sobe a stack via `docker compose up -d --build`, aguardando o health check antes de prosseguir.
+- **Instalação:** `uv sync` + `playwright install --with-deps chromium`.
+- **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
+- **Bugs conhecidos como `@xfail`:** Os 3 cenários de `authorization.feature` que documentam `BUG-AUTH-001`/`BUG-AUTH-002` são marcados com a tag `@xfail` (com `xfail_strict` habilitado). Isso permite que o pipeline reporte sucesso normalmente enquanto continua executando e rastreando esses cenários — se algum dos bugs for corrigido, o cenário correspondente passa a `XPASS` e quebra o build, sinalizando a regressão em vez de passar despercebida.
+- **Upload do Artefato:** Disponibiliza o relatório HTML e os artefatos de falha (`playwright-report/`, `test-results/`) como artefato do build no GitHub Actions.
 
-Ambiente: Configura um ambiente Ubuntu com Node.js v20.
-
-Instalação: Instala as dependências usando npm ci (com cache para otimização).
-
-Execução dos Testes:
-
-Utiliza a action cypress-io/github-action@v6.
-
-Importante: Por padrão, NÃO executa os testes E2E do fluxo de compra (purchase_flow.feature) e de gerenciamento de pedidos (manage_orders.feature) no pipeline de CI. Isso é feito intencionalmente para evitar a geração de dados persistentes (pedidos) na aplicação a cada execução do pipeline. A execução é limitada aos testes de authentication, authorization, login e manage_product via parâmetro spec:.
-
-Geração do Relatório: Executa o script generate-cucumber-report.js.
-
-Upload do Artefato: Disponibiliza o relatório HTML (cucumber-html-report.html) como um artefato do build no GitHub Actions.
-
-(Link para o status do último build na badge no topo deste README)
+(Link para o status do último build na badge no topo deste README.)
 
 ## 9. Descobertas e Bugs Identificados
 
-Durante o desenvolvimento da automação, foram identificadas as seguintes vulnerabilidades de segurança na aplicação WDE Shop:
+Durante o desenvolvimento da automação, foram identificadas as seguintes vulnerabilidades de segurança na aplicação WDE Shop — ambas continuam presentes e são reproduzidas pela suíte atual (marcadas `@xfail` para não quebrar o CI, mas ainda executadas a cada run):
 
-BUG-AUTH-001: Falha de Autorização no Acesso a Páginas Administrativas
+**BUG-AUTH-001: Falha de Autorização no Acesso a Páginas Administrativas**
 
-Descrição: Usuários autenticados com o perfil "cliente" conseguem acessar diretamente URLs de gerenciamento de produtos (/admin/products, /admin/products/edit/:id), que deveriam ser restritas a administradores.
+Descrição: Usuários autenticados com o perfil "cliente" conseguem acessar diretamente URLs de gerenciamento de produtos (`/admin/products`, `/admin/products/:id`), que deveriam ser restritas a administradores.
 
-Comprovação: Os testes automatizados em authorization.feature falham intencionalmente ao tentar acessar essas páginas como cliente, confirmando a vulnerabilidade.
+Comprovação: Os cenários automatizados em `authorization.feature` documentam o comportamento esperado (acesso negado) e falham intencionalmente contra o comportamento real, confirmando a vulnerabilidade.
 
 Relatório Detalhado: [BUG-AUTH-001 Report](docs/bugs/BUG-AUTH-001.md)
 
-BUG-AUTH-002: Falha de Autorização e Vazamento de Informação na Página de Pedidos
+**BUG-AUTH-002: Falha de Autorização e Vazamento de Informação na Página de Pedidos**
 
-Descrição: Usuários autenticados como "cliente" conseguem acessar a URL /admin/orders. Embora a página apareça parcialmente quebrada (sem controles de admin), ela exibe informações de pedidos, incluindo pedidos de outros usuários (confirmado manualmente após execução do fluxo E2E que gera um pedido). Isso representa uma falha de autorização e um vazamento de informações (embora sem PII direta visível, os detalhes do pedido são expostos).
+Descrição: Usuários autenticados como "cliente" conseguem acessar a URL `/admin/orders`. Embora a página apareça parcialmente quebrada (sem controles de admin), ela exibe informações de pedidos, incluindo pedidos de outros usuários.
 
-Comprovação: O teste automatizado em authorization.feature para /admin/orders não resulta em um redirecionamento esperado (401/403), e a verificação manual confirmou o acesso indevido a dados de outros usuários.
+Comprovação: O cenário automatizado para `/admin/orders` não resulta na mensagem de autorização esperada, e a verificação manual confirmou o acesso indevido a dados de outros usuários.
 
 Relatório Detalhado: [BUG-AUTH-002 Report](docs/bugs/BUG-AUTH-002.md)
 
 ## 10. Desafios e Decisões Chave
 
-Automação de Pagamento Externo (Stripe):
+**Migração de Cypress/Cucumber (JS) para Playwright/pytest-bdd (Python):** decisão documentada em detalhe no [ROADMAP.md](ROADMAP.md), incluindo o mapeamento passo a passo de cada padrão Cypress para seu equivalente em Playwright.
 
-Desafio: O Cypress encontrou erros de cross-origin ao ser redirecionado para checkout.stripe.com. A tentativa de usar cy.origin() permitiu a validação do redirecionamento, mas a interação com elementos dentro da página do Stripe (provavelmente em iframes e com medidas anti-automação) provou-se extremamente complexa e instável.
+**Automação de Pagamento Externo (Stripe) — limitação superada:** a versão em Cypress precisava de `cy.origin()` para validar apenas o redirecionamento para `checkout.stripe.com`, sem conseguir interagir com a página em si (cross-origin/iframes eram instáveis). O Playwright não tem essa limitação — navegação cross-origin é nativa — então o cenário `purchase_flow.feature` hoje valida o fluxo completo até o redirecionamento real para o Stripe, usando uma chave de teste (`sk_test_...`) de verdade.
 
-Decisão: Encurtar o teste E2E purchase_flow.feature. O teste agora valida com sucesso o redirecionamento para o domínio do Stripe (cy.url().should('include', 'stripe.com')) usando cy.origin(), mas não prossegue com o preenchimento dos dados de pagamento.
+**Bug de confiabilidade encontrado na aplicação (fora do escopo original de segurança):** ao validar o fluxo de compra localmente, uma falha na criação da sessão do Stripe (ex: chave inválida) derrubava o processo Node inteiro (`unhandled promise rejection` sem tratamento), tirando a aplicação do ar para todos os usuários. Corrigido diretamente no repositório `wde` (try/catch ao redor da chamada ao Stripe).
 
-Investigação do BUG-AUTH-002: O teste E2E, mesmo encurtado, foi útil para gerar dados (um pedido para o cliente) que permitiram a confirmação manual do vazamento de informações na página /admin/orders.
+**CI/CD com bugs conhecidos:** rodar `authorization.feature` (que documenta bugs reais) no pipeline padrão deixava o build sempre vermelho, mesmo quando nada estava quebrado. A solução foi marcar os cenários como `@xfail` com `xfail_strict = true`, preservando a cobertura e a intenção original (falhar é o comportamento esperado) sem mascarar regressões de verdade.
 
-Otimização CI/CD: A utilização da action cypress-io/github-action com cache e a exclusão estratégica de testes que geram dados persistentes (purchase_flow.feature, manage_orders.feature) do fluxo padrão de CI garantem um feedback mais rápido e um ambiente de teste mais limpo.
-
-Estrutura de Código: Decidiu-se por unificar os Page Objects (/pages) e Step Definitions (/support/step_definitions) para simplificar a estrutura, mantendo a separação lógica apenas nos arquivos .feature (/integration/admin e /integration/client).
-
-Refatorações: Centralização da lógica de login em common_steps.js usando Background e steps parametrizados (Dado que eu estou logado como {string}) para reutilização em testes de admin e cliente.
+**Estrutura de Código:** manteve-se a mesma filosofia da versão em Cypress — Page Objects unificados (`pages/`) e Step Definitions organizadas por feature (`steps/`), com steps compartilhados (como o login parametrizado por papel) centralizados em `steps/conftest.py`.
 
 ## 11. Próximos Passos (Sugestões)
 
-Embora o escopo definido para este projeto de portfólio tenha sido concluído, possíveis melhorias futuras poderiam incluir:
+Veja a seção "Fase 9" do [ROADMAP.md](ROADMAP.md) para a lista completa de melhorias habilitadas pela migração para Playwright, incluindo:
 
-Implementação de um Linter (como ESLint) para padronização de código.
-
-Expansão da cobertura de testes (mais cenários negativos, testes de API).
-
-Integração com ferramentas de gerenciamento de testes (ex: TestRail, Zephyr Scale).
-
-Exploração de testes visuais com ferramentas como Applitools ou Percy.
+- Matriz multi-browser (Chromium/Firefox/WebKit) no CI.
+- Execução paralela via `pytest-xdist`.
+- Completar o checkout de teste do Stripe (preenchendo o cartão de teste), já que o Playwright lida melhor com iframes cross-origin.
+- Testes de regressão visual com `expect(page).to_have_screenshot()`.
+- Cobertura de API leve com `playwright.request`.

@@ -94,67 +94,67 @@ wde_automacao/
 ## 5. Fases
 
 ### Fase 0 — Scaffolding do projeto
-- [ ] `uv init`, `pyproject.toml` com Python ≥ 3.11
-- [ ] Dependências: `pytest`, `pytest-bdd`, `pytest-playwright`, `playwright`
-- [ ] `uv run playwright install --with-deps chromium`
-- [ ] Estrutura de pastas (seção 3), `.gitignore` atualizado (`.venv/`, `__pycache__/`, `test-results/`, `playwright-report/`)
-- [ ] `conftest.py` com fixture `base_url` (`https://wde-5p3f.onrender.com`)
+- [x] `uv init`, `pyproject.toml` com Python ≥ 3.11
+- [x] Dependências: `pytest`, `pytest-bdd`, `pytest-playwright`, `playwright`
+- [x] `uv run playwright install --with-deps chromium`
+- [x] Estrutura de pastas (seção 3), `.gitignore` atualizado (`.venv/`, `__pycache__/`, `test-results/`, `playwright-report/`)
+- [x] `conftest.py` com fixture `base_url` (`https://wde-5p3f.onrender.com`)
 
 **Pronto quando:** `uv run pytest --collect-only` roda sem erro (mesmo sem testes ainda).
 
 ### Fase 1 — Infraestrutura central (dados + Page Objects)
-- [ ] Portar `users.json`, `orders.json`, `mousepad.jpg` → `test_data/`
-- [ ] Portar `helpers.js` → `utils/helpers.py` (`format_product_data`)
-- [ ] Page Objects Python: `LoginPage`, `ProductsPage`, `CartPage`, `OrdersPage`
-- [ ] Fixture de login parametrizada por papel (`admin`/`cliente`), equivalente ao `commonSteps.js`
+- [x] Portar `users.json`, `orders.json`, `mousepad.jpg` → `test_data/`
+- [x] Portar `helpers.js` → `utils/helpers.py` (`format_product_data`)
+- [x] Page Objects Python: `LoginPage`, `ProductsPage`, `CartPage`, `OrdersPage`
+- [x] Fixture de login parametrizada por papel (`admin`/`cliente`), equivalente ao `commonSteps.js`
 
 **Pronto quando:** Page Objects têm cobertura de smoke manual (script solto ou teste único de login).
 
 ### Fase 2 — Login e segurança (admin)
-- [ ] `login.feature`, `authentication.feature`, `authorization.feature`
-- [ ] `test_admin_login_steps.py`, `test_security_steps.py`, `test_common_steps.py`
-- [ ] Confirmar que os 2 bugs conhecidos (`BUG-AUTH-001`, `BUG-AUTH-002`) ainda reproduzem igual (mesmos cenários "devem falhar")
+- [x] `login.feature`, `authentication.feature`, `authorization.feature`
+- [x] `test_admin_login_steps.py`, `test_security_steps.py`, `test_common_steps.py`
+- [x] Confirmar que os 2 bugs conhecidos (`BUG-AUTH-001`, `BUG-AUTH-002`) ainda reproduzem igual (mesmos cenários "devem falhar")
 
 **Pronto quando:** os cenários rodam contra o app publicado e o resultado (pass/fail) bate com o comportamento documentado nos relatórios de bug.
 
 ### Fase 3 — CRUD de produtos (admin)
-- [ ] `manage_product.feature` + `test_manage_product_steps.py`
-- [ ] `fillProductForm` → método Python no `ProductsPage` (mapa de campos igual ao original)
-- [ ] Validação de campo obrigatório via `validity`/`validationMessage`
+- [x] `manage_product.feature` + `test_manage_product_steps.py`
+- [x] `fillProductForm` → método Python no `ProductsPage` (mapa de campos igual ao original)
+- [x] Validação de campo obrigatório via `validity`/`validationMessage`
 
 **Pronto quando:** os 4 cenários (add, edit, delete, validação) passam de ponta a ponta.
 
 ### Fase 4 — Gerenciamento de pedidos (admin)
-- [ ] `manage_orders.feature` + `test_manage_orders_steps.py`
-- [ ] Troca de `cy.intercept`/`cy.wait` por `page.expect_response`
+- [x] `manage_orders.feature` + `test_manage_orders_steps.py`
+- [x] Troca de `cy.intercept`/`cy.wait` por `page.expect_response`
 
 **Pronto quando:** update de status reflete no badge, aguardando a resposta de rede real (não um `sleep`).
 
 ### Fase 5 — Fluxo de compra do cliente (E2E + Stripe)
-- [ ] `purchase_flow.feature` + `test_purchase_flow_steps.py`
-- [ ] Reproduzir o comportamento atual (parar na confirmação de redirecionamento ao domínio Stripe)
-- [ ] Registrar como "stretch" (Fase 9) a possibilidade de ir além, já que Playwright lida melhor com iframes/cross-origin
+- [x] `purchase_flow.feature` + `test_purchase_flow_steps.py`
+- [x] Reproduzir o comportamento atual (parar na confirmação de redirecionamento ao domínio Stripe)
+- [x] Registrar como "stretch" (Fase 9) a possibilidade de ir além, já que Playwright lida melhor com iframes/cross-origin
 
 **Pronto quando:** cenário passa e gera o mesmo pedido de teste que hoje permite validar `BUG-AUTH-002` manualmente.
 
 ### Fase 6 — Relatórios e artefatos de falha
-- [ ] Escolher entre `pytest-html` (simples) ou `allure-pytest-bdd` (visual, mais próximo do Cucumber HTML atual) — sugestão: começar com `pytest-html`, migrar para Allure se quiser algo mais "portfolio-ready"
-- [ ] Configurar `--tracing=retain-on-failure --video=retain-on-failure --screenshot=only-on-failure` (equivalente ao `video: true` do Cypress, mas só guarda em falha)
+- [x] Escolher entre `pytest-html` (simples) ou `allure-pytest-bdd` (visual, mais próximo do Cucumber HTML atual) — sugestão: começar com `pytest-html`, migrar para Allure se quiser algo mais "portfolio-ready"
+- [x] Configurar `--tracing=retain-on-failure --video=retain-on-failure --screenshot=only-on-failure` (equivalente ao `video: true` do Cypress, mas só guarda em falha)
 
 **Pronto quando:** uma falha proposital gera trace/vídeo/screenshot recuperável localmente.
 
 ### Fase 7 — CI/CD (GitHub Actions)
-- [ ] Novo workflow `playwright-tests.yml`: setup Python + `uv`, `uv sync`, `playwright install --with-deps`
-- [ ] Manter a mesma exclusão estratégica de CI (sem `purchase_flow` e `manage_orders` no pipeline padrão, mesmo motivo: evitar dados persistentes)
-- [ ] Upload de artefatos (`playwright-report/`, `test-results/`)
-- [ ] Atualizar badge no README
+- [x] Novo workflow `playwright-tests.yml`: setup Python + `uv`, `uv sync`, `playwright install --with-deps`
+- [x] Manter a mesma exclusão estratégica de CI (sem `purchase_flow` e `manage_orders` no pipeline padrão, mesmo motivo: evitar dados persistentes)
+- [x] Upload de artefatos (`playwright-report/`, `test-results/`)
+- [x] Atualizar badge no README
 
 **Pronto quando:** PR de teste dispara o workflow e o artefato de relatório fica disponível no Actions.
 
 ### Fase 8 — Documentação e limpeza
-- [ ] Reescrever `README.md` (stack, estrutura, instalação via `uv sync`, execução via `uv run pytest`)
-- [ ] Manter `docs/bugs/` e `evidence/` (ainda válidos, só ajustar referências de comando se citarem Cypress)
-- [ ] Antes de remover `cypress/`, `cypress.config.js`, `generate-cucumber-report.js`, `cucumber-messages.ndjson`: criar tag/branch `legacy-cypress` para preservar histórico consultável
+- [x] Reescrever `README.md` (stack, estrutura, instalação via `uv sync`, execução via `uv run pytest`)
+- [x] Manter `docs/bugs/` e `evidence/` (ainda válidos, só ajustar referências de comando se citarem Cypress)
+- [x] Antes de remover `cypress/`, `cypress.config.js`, `generate-cucumber-report.js`, `cucumber-messages.ndjson`: criar tag/branch `legacy-cypress` para preservar histórico consultável
 
 **Pronto quando:** README reflete só a stack nova, e a suíte Cypress antiga está preservada em `legacy-cypress` mas fora do diretório principal.
 
