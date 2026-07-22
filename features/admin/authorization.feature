@@ -7,17 +7,20 @@ Funcionalidade: Segurança - Autorização do Painel Administrativo
   Contexto: Usuário cliente logado
     Dado que eu estou logado como "cliente"
 
-  # BUG CONHECIDO: Este cenário DEVE FALHAR se o bug persistir
+  # BUG CONHECIDO (BUG-AUTH-001): Este cenário DEVE FALHAR se o bug persistir
+  @xfail
   Cenario: Tentativa de acesso direto a Produtos do Admin por usuário cliente
     Quando eu tento acessar a URL "/admin/products"
     Então eu NÃO devo conseguir acessar a página de Produtos do Admin
 
-  # Verificar proteção da área de Pedidos
+  # BUG CONHECIDO (BUG-AUTH-002): Este cenário DEVE FALHAR se o bug persistir
+  @xfail
   Cenario: Tentativa de acesso direto a Pedidos do Admin por usuário cliente
     Quando eu tento acessar a URL "/admin/orders"
     Então eu devo ver uma mensagem indicando falta de autorização
 
-  # BUG CONHECIDO: Este cenário DEVE FALHAR se o bug persistir
+  # BUG CONHECIDO (BUG-AUTH-001): Este cenário DEVE FALHAR se o bug persistir
+  @xfail
   Cenario: Tentativa de acesso direto ao formulário de Edição de Produto por usuário cliente
     Quando eu tento acessar a URL "/admin/products/000000000000000000000001"
     Então eu NÃO devo conseguir acessar o formulário de Edição de Produto

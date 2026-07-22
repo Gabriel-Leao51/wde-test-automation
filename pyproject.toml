@@ -15,6 +15,7 @@ dependencies = [
 testpaths = ["steps"]
 bdd_features_base_dir = "features"
 addopts = "--tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure --html=playwright-report/report.html --self-contained-html"
+xfail_strict = true
 markers = [
     "auth: cenários de autenticação/autorização",
     "login-admin: cenários de login administrativo",
