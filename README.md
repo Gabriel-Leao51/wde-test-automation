@@ -149,7 +149,19 @@ O workflow está configurado em `.github/workflows/playwright-tests.yml` e reali
 
 ## 9. Descobertas e Bugs Identificados
 
-Durante o desenvolvimento da automação, foram identificadas as seguintes vulnerabilidades de segurança na aplicação WDE Shop — ambas continuam presentes e são reproduzidas pela suíte atual (marcadas `@xfail` para não quebrar o CI, mas ainda executadas a cada run):
+Durante o desenvolvimento da automação, foram identificadas vulnerabilidades de segurança na aplicação WDE Shop. As que seguem presentes são reproduzidas pela suíte atual (marcadas `@xfail` para não quebrar o CI, mas ainda executadas a cada run em `features/security/hardening.feature` e `features/admin/authorization.feature`).
+
+### Corrigidos
+
+**NoSQL Injection → Crash Total da Aplicação (não autenticado)**
+
+Descrição: `POST /login` (ou `/signup`) com corpo JSON `{"email":{"$ne":null},"password":{"$ne":null}}` fazia o MongoDB interpretar `$ne` como operador de consulta (contornando a busca por e-mail exato) e, em seguida, derrubava o processo Node inteiro ao passar um objeto (em vez de string) para `bcrypt.compare()` — uma exceção não tratada. Um único request não autenticado bastava para tirar a aplicação do ar para todos os usuários.
+
+Correção: validação de tipo (`email`/`password` devem ser strings) adicionada em `controllers/auth.controller.js` e `util/validation.js`, fechando tanto o vetor de injeção quanto o crash.
+
+Comprovação: `features/security/hardening.feature`, cenários de NoSQL injection em `/login` e `/signup` — hoje passam normalmente (não são mais `@xfail`), validando que a aplicação responde com "Invalid credentials" e permanece no ar.
+
+### Ainda presentes
 
 **BUG-AUTH-001: Falha de Autorização no Acesso a Páginas Administrativas**
 
@@ -166,6 +178,36 @@ Descrição: Usuários autenticados como "cliente" conseguem acessar a URL `/adm
 Comprovação: O cenário automatizado para `/admin/orders` não resulta na mensagem de autorização esperada, e a verificação manual confirmou o acesso indevido a dados de outros usuários.
 
 Relatório Detalhado: [BUG-AUTH-002 Report](docs/bugs/BUG-AUTH-002.md)
+
+**BUG-INFO-001: Exposição de Detalhes Internos do Servidor em Páginas de Erro**
+
+Descrição: `NODE_ENV` nunca é definido como `production`, então qualquer exceção não tratada expõe caminhos do servidor, trechos de código-fonte dos templates e stack traces do Node ao cliente. Agravado por uma falha em cascata: a própria página de erro (`500.ejs`) quebra ao tentar renderizar `locals.cart`, que não existe em erros disparados antes do `cartMiddleware` rodar (ex: rejeição de CSRF).
+
+Relatório Detalhado: [BUG-INFO-001 Report](docs/bugs/BUG-INFO-001.md)
+
+**BUG-SEC-002: Ausência de Headers HTTP de Segurança**
+
+Descrição: Nenhum header de segurança padrão (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, etc.) está presente nas respostas, e `X-Powered-By: Express` vaza a stack tecnológica. Nenhum middleware de segurança (`helmet` ou equivalente) está em uso.
+
+Relatório Detalhado: [BUG-SEC-002 Report](docs/bugs/BUG-SEC-002.md)
+
+**BUG-SEC-003: Token CSRF Exposto na URL do Formulário de Produto**
+
+Descrição: O formulário de produto envia o token CSRF como parâmetro de query string (`?_csrf=...`) na `action`, em vez de campo oculto — diferente de todos os outros formulários da aplicação, que fazem isso corretamente.
+
+Relatório Detalhado: [BUG-SEC-003 Report](docs/bugs/BUG-SEC-003.md)
+
+**BUG-SEC-004: Cookie de Sessão sem Flags `Secure`/`SameSite`**
+
+Descrição: O cookie `connect.sid` define apenas `HttpOnly`; `Secure` e `SameSite` não são configurados explicitamente.
+
+Relatório Detalhado: [BUG-SEC-004 Report](docs/bugs/BUG-SEC-004.md)
+
+**BUG-SEC-005: Segredo de Sessão Hardcoded no Código-Fonte**
+
+Descrição: `config/session.js` usa a string literal `"super-secret"` como segredo de assinatura de sessão, em vez de uma variável de ambiente — diferente dos demais segredos da aplicação (`MONGODB_URI`, `STRIPE_KEY`), que já vêm do `.env`.
+
+Relatório Detalhado: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 
 ## 10. Desafios e Decisões Chave
 

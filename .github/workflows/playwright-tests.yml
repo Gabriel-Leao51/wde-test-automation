@@ -62,6 +62,7 @@ jobs:
           uv run pytest -n 4
           steps/test_admin_login_steps.py
           steps/test_security_steps.py
+          steps/test_security_hardening_steps.py
           steps/test_manage_product_steps.py
         # Note: manage_orders.feature and purchase_flow.feature are intentionally excluded
         # from CI, same rationale as the original Cypress pipeline: they create persistent

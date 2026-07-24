@@ -27,4 +27,10 @@ markers = [
     "product: cenários relacionados a produtos",
     "order: cenários relacionados a pedidos",
     "validation: cenários de validação de formulário",
+    "security: cenários de segurança avançada (hardening.feature)",
+    "injection: cenários de tentativa de injeção (NoSQL, etc.)",
+    "headers: cenários de headers HTTP de segurança",
+    "csrf: cenários de proteção CSRF",
+    "session: cenários de cookies/sessão",
+    "error-handling: cenários de tratamento de erros",
 ]
