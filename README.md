@@ -133,6 +133,14 @@ Cada execução gera um relatório HTML autocontido em `playwright-report/report
 uv run playwright show-trace test-results/<pasta-do-teste>/trace.zip
 ```
 
+### 7.8. Suíte de segurança avançada (`features/security/`)
+
+Além dos testes via UI/HTTP (Playwright), o cenário de prova de conceito do `BUG-SEC-005` conecta diretamente ao MongoDB para forjar uma sessão (ver relatório do bug para detalhes). Por isso, o `docker-compose.yml` do repositório `wde` publica a porta do MongoDB em `127.0.0.1:27017`. Se estiver rodando os testes fora do padrão local (`localhost:3000` + `localhost:27017`), aponte também a variável `MONGODB_URI`:
+
+```bash
+MONGODB_URI=mongodb://outro-host:27017 uv run pytest steps/test_security_hardening_steps.py
+```
+
 ## 8. Integração Contínua (CI/CD) com GitHub Actions
 
 O workflow está configurado em `.github/workflows/playwright-tests.yml` e realiza as seguintes etapas:
@@ -203,9 +211,11 @@ Descrição: O cookie `connect.sid` define apenas `HttpOnly`; `Secure` e `SameSi
 
 Relatório Detalhado: [BUG-SEC-004 Report](docs/bugs/BUG-SEC-004.md)
 
-**BUG-SEC-005: Segredo de Sessão Hardcoded no Código-Fonte**
+**BUG-SEC-005: Segredo de Sessão Hardcoded → Personificação Completa de Administrador (CRÍTICA)**
 
-Descrição: `config/session.js` usa a string literal `"super-secret"` como segredo de assinatura de sessão, em vez de uma variável de ambiente — diferente dos demais segredos da aplicação (`MONGODB_URI`, `STRIPE_KEY`), que já vêm do `.env`.
+Descrição: `config/session.js` usa a string literal `"super-secret"` como segredo de assinatura de sessão, em vez de uma variável de ambiente. Comprovado via prova de conceito funcional: um cookie de sessão forjado do zero (assinado com esse segredo, sem nunca chamar `/login`) é aceito pelo servidor e concede acesso administrativo completo.
+
+Comprovação: `features/security/hardening.feature`, cenário "Um cookie de sessão forjado com o segredo hardcoded não deve conceder acesso" — insere uma sessão diretamente no MongoDB, assina o cookie com o mesmo algoritmo do `cookie-signature`, e confirma que `GET /admin/products` retorna o painel administrativo completo usando apenas esse cookie.
 
 Relatório Detalhado: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 

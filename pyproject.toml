@@ -5,6 +5,7 @@ description = "Suite de testes E2E (Playwright + pytest-bdd) para a WDE Shop"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pymongo>=4.17.0",
     "pytest>=9.1.1",
     "pytest-bdd>=8.1.0",
     "pytest-html>=4.2.0",

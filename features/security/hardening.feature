@@ -45,3 +45,10 @@ Funcionalidade: Segurança Avançada - Hardening da Aplicação
     Quando eu envio uma requisicao que causa um erro interno no servidor
     Entao a resposta nao deve conter caminhos do sistema de arquivos do servidor
     E a resposta nao deve conter trechos de codigo-fonte do servidor
+
+  # BUG CONHECIDO (BUG-SEC-005): segredo de sessão hardcoded permite forjar cookies válidos
+  @security @session @xfail
+  Cenario: Um cookie de sessão forjado com o segredo hardcoded não deve conceder acesso
+    Quando eu forjo um cookie de sessao de administrador usando o segredo hardcoded do codigo-fonte
+    E eu acesso "/admin/products" usando apenas o cookie forjado
+    Entao o acesso NAO deve ser concedido sem um login de verdade

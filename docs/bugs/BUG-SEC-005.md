@@ -2,15 +2,15 @@
 
 ## Severidade
 
-**MÉDIA**
+**CRÍTICA**
 
-- **Justificativa:** O segredo usado para assinar os cookies de sessão (`express-session`) está escrito literalmente no código-fonte (`config/session.js`), versionado no repositório Git. Qualquer pessoa com acesso ao código — incluindo o histórico do repositório, mesmo que o valor seja trocado depois — tem tudo o que precisa para **forjar cookies de sessão válidos**, potencialmente se autenticando como qualquer usuário sem precisar de credenciais.
+- **Justificativa:** Comprovado por prova de conceito automatizada (ver Evidências): conhecer o valor `"super-secret"` é suficiente para forjar um cookie `connect.sid` assinado corretamente e obter acesso administrativo completo (`/admin/products` renderizado com sucesso) **sem nunca chamar `/login` e sem conhecer nenhuma credencial**. Não é "potencialmente" explorável — é personificação de administrador de ponta a ponta, comprovada nesta rodada.
 
 ## Prioridade
 
-**MÉDIA**
+**ALTA**
 
-- **Justificativa:** Não é explorável remotamente por um atacante sem acesso ao código-fonte, mas viola um princípio básico de gestão de segredos e representa risco real caso o repositório seja (ou se torne) público, ou em caso de vazamento de código-fonte.
+- **Justificativa:** Não é explorável remotamente por um atacante sem acesso ao segredo (que hoje só está no código-fonte), mas uma vez obtido o segredo, o impacto é total e imediato — sem necessidade de senha, token de sessão roubado ou qualquer outra credencial. Risco real caso o repositório seja (ou se torne) público, ou em caso de vazamento de código-fonte.
 
 ## Ambiente
 
@@ -40,28 +40,50 @@
    }
    ```
 
-2. O valor `"super-secret"` é o segredo usado pelo `express-session` (via `cookie-signature`) para assinar o cookie `connect.sid`. Qualquer um com esse valor pode gerar uma assinatura válida para um `sessionID` arbitrário (por exemplo, o `_id` de um usuário administrador conhecido) e apresentá-la ao servidor como se fosse uma sessão legítima.
+2. O valor `"super-secret"` é o segredo usado pelo `express-session` (via `cookie-signature`) para assinar o cookie `connect.sid`. Qualquer um com esse valor pode gerar uma assinatura válida para um `sessionID` arbitrário e apresentá-la ao servidor como se fosse uma sessão legítima.
+
+3. **Prova de conceito completa** (reproduzida em `steps/test_security_hardening_steps.py`, função `forge_admin_session_cookie` + cenário "Um cookie de sessão forjado com o segredo hardcoded não deve conceder acesso" em `features/security/hardening.feature`):
+
+   a. Conectar diretamente ao MongoDB (`sessions` collection, mesmo schema usado pelo `connect-mongodb-session`) e inserir um documento de sessão arbitrário, com `uid` apontando para o `_id` real de um usuário administrador e `isAdmin: true` — sem nunca ter feito login:
+
+      ```python
+      db.sessions.insert_one({
+          "_id": forged_sid,
+          "session": {"cookie": {...}, "uid": str(admin_user["_id"]), "isAdmin": True},
+          "expires": expires_at,
+      })
+      ```
+
+   b. Assinar o `sid` escolhido com o mesmo algoritmo do `cookie-signature` (`HMAC-SHA256` em base64, sem padding), usando o segredo hardcoded:
+
+      ```python
+      mac = hmac.new(b"super-secret", forged_sid.encode(), hashlib.sha256).digest()
+      cookie_value = f"s:{forged_sid}." + base64.b64encode(mac).decode().rstrip("=")
+      ```
+
+   c. Fazer uma requisição `GET /admin/products` usando **apenas** esse cookie forjado, em um contexto de requisição totalmente novo e isolado (sem nenhum cookie de uma sessão real).
 
 ## Resultado Esperado
 
-O segredo de sessão deve vir de uma variável de ambiente (ex: `process.env.SESSION_SECRET`), gerada de forma aleatória e nunca commitada no controle de versão — seguindo o mesmo padrão já usado para `MONGODB_URI` e `STRIPE_KEY` neste projeto.
+O segredo de sessão deve vir de uma variável de ambiente (ex: `process.env.SESSION_SECRET`), gerada de forma aleatória e nunca commitada no controle de versão — seguindo o mesmo padrão já usado para `MONGODB_URI` e `STRIPE_KEY` neste projeto. Um cookie forjado dessa forma não deveria ser aceito pelo servidor.
 
 ## Resultado Atual (Falha)
 
-O segredo é uma string literal fixa no código-fonte, idêntica em toda instância da aplicação e visível a qualquer pessoa com acesso ao repositório (incluindo todo o histórico de commits, mesmo que seja alterado em um commit futuro).
+- O segredo é uma string literal fixa no código-fonte, idêntica em toda instância da aplicação e visível a qualquer pessoa com acesso ao repositório (incluindo todo o histórico de commits, mesmo que seja alterado em um commit futuro).
+- **Confirmado por execução real:** a requisição `GET /admin/products` com o cookie forjado retornou `200 OK` com o HTML completo do painel administrativo (`Manage Products` presente na resposta) — acesso de administrador obtido sem nunca chamar `/login`.
 
 ## Evidências
 
 - **Código-fonte:** `wde/config/session.js`, linha do campo `secret`.
-- Não há um teste automatizado de ponta a ponta para este item nesta suíte — a forma mais direta de comprovação seria forjar um cookie assinado com esse segredo (usando o mesmo algoritmo de `cookie-signature`) e verificar que o servidor o aceita como válido; deixado como próximo passo manual/futuro dado o escopo desta rodada.
+- **Teste Automatizado (prova de conceito funcional):** `features/security/hardening.feature`, cenário "Um cookie de sessão forjado com o segredo hardcoded não deve conceder acesso" (`@xfail`, tag `@session`) — forja um cookie do zero (sem depender de nenhuma sessão pré-existente) e comprova que o servidor concede acesso administrativo com base apenas nele.
 
 ## Análise de Causa Raiz
 
 O valor foi provavelmente deixado como placeholder durante o desenvolvimento inicial e nunca migrado para configuração via ambiente, ao contrário dos demais segredos da aplicação (`MONGODB_URI`, `STRIPE_KEY`), que já são lidos de variáveis de ambiente desde a dockerização do projeto.
 
-## Impacto Potencial
+## Impacto Potencial (Confirmado)
 
-- Falsificação de cookies de sessão, permitindo personificar qualquer usuário (incluindo administradores) sem conhecer suas credenciais, caso o segredo seja exposto (ex: repositório se tornar público, vazamento de código).
+- **Personificação completa de qualquer usuário, incluindo administradores, sem conhecer nenhuma credencial** — demonstrado nesta rodada via prova de conceito funcional, condicionado apenas ao segredo estar exposto (ex: repositório se tornar público, vazamento de código).
 - Mesmo com o segredo trocado futuramente, o valor atual permanece no histórico do Git indefinidamente, a menos que o histórico seja reescrito.
 
 ## Recomendações
