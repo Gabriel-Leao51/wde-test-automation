@@ -93,6 +93,13 @@ O projeto abrange diferentes áreas e tipos de testes:
 uv run pytest
 ```
 
+Por padrão roda em Chromium. Para rodar em outro navegador:
+
+```bash
+uv run pytest --browser=firefox
+uv run pytest --browser=webkit
+```
+
 ### 7.2. Modo headed (com navegador visível)
 
 ```bash
@@ -148,8 +155,9 @@ O workflow está configurado em `.github/workflows/playwright-tests.yml` e reali
 - **Gatilhos:** Executado em eventos de `push` e `pull_request` na branch `main`.
 - **Ambiente:** Ubuntu com Python 3.12 (via `uv`) e Docker.
 - **Aplicação alvo:** Faz checkout do repositório `wde` como um diretório irmão e sobe a stack via `docker compose up -d --build`, aguardando o health check antes de prosseguir.
-- **Instalação:** `uv sync` + `playwright install --with-deps chromium`.
-- **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`) em paralelo com `-n 4` (ver seção 7.4). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
+- **Matriz multi-browser:** roda o job completo 3 vezes em paralelo (Chromium, Firefox, WebKit), cada um com sua própria stack Docker isolada (evita interferência de concorrência entre browsers). `fail-fast: false` — a falha em um navegador não cancela os outros.
+- **Instalação:** `uv sync` + `playwright install --with-deps <browser-da-matriz>`.
+- **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`) em paralelo via `pytest-xdist` (ver seção 7.4) — `-n 4` para Chromium, `-n 2` para Firefox/WebKit (processos mais pesados, tiveram timeouts intermitentes em `-n 4` durante validação local). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
 - **Bugs conhecidos como `@xfail`:** Os 3 cenários de `authorization.feature` que documentam `BUG-AUTH-001`/`BUG-AUTH-002` são marcados com a tag `@xfail` (com `xfail_strict` habilitado). Isso permite que o pipeline reporte sucesso normalmente enquanto continua executando e rastreando esses cenários — se algum dos bugs for corrigido, o cenário correspondente passa a `XPASS` e quebra o build, sinalizando a regressão em vez de passar despercebida.
 - **Upload do Artefato:** Disponibiliza o relatório HTML e os artefatos de falha (`playwright-report/`, `test-results/`) como artefato do build no GitHub Actions.
 

@@ -159,7 +159,7 @@ wde_automacao/
 **Pronto quando:** README reflete só a stack nova, e a suíte Cypress antiga está preservada em `legacy-cypress` mas fora do diretório principal.
 
 ### Fase 9 — Melhorias habilitadas pelo Playwright (stretch, pós-paridade)
-- [ ] Matriz multi-browser (chromium/firefox/webkit) no CI — Cypress hoje só roda Chrome
+- [x] Matriz multi-browser (chromium/firefox/webkit) no CI — Cypress hoje só roda Chrome. Achado: Firefox e WebKit sobem processos mais pesados que o Chromium e tiveram timeouts intermitentes em `-n 4`; `-n 2` foi confiável para ambos. Também expôs um teste com texto de validação HTML5 hardcoded para o wording específico do Chromium (`"Please fill out this field."`) — WebKit usa `"Fill out this field"`; corrigido para checar `validity.valueMissing` + mensagem não-vazia, sem fixar o texto exato.
 - [x] Execução paralela via `pytest-xdist` — `--dist=loadgroup` (pyproject.toml) + tag `@xdist_group_product_crud` nos 3 primeiros cenários de `manage_product.feature`, mapeada para `pytest.mark.xdist_group(name="product_crud")` via hook `pytest_bdd_apply_tag` em `conftest.py`. Achado: `-n auto` (todos os cores) causa timeouts intermitentes contra o app local (processo Node/Mongo único, sem escalonamento) — `-n 4` é o teto recomendado, validado em múltiplas execuções limpas. Também expôs e corrigiu 3 locators sem escopo (`Manage Products`/`Manage Orders`/`Logout`/`Orders` casavam tanto o header quanto o menu mobile) que só viravam flake sob concorrência.
 - [ ] Tentar completar o checkout de teste do Stripe (cartão de teste `4242...`) já que Playwright lida melhor com iframes cross-origin
 - [ ] Testes de regressão visual com `expect(page).to_have_screenshot()`

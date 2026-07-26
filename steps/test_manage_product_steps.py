@@ -93,10 +93,14 @@ def assert_product_deleted(products_page, scenario_context, product_title):
 @then("eu devo ver uma mensagem de erro informando que os campos obrigatorios devem ser preenchidos")
 def assert_required_field_error(products_page):
     validity = products_page.product_title_input.evaluate(
-        "el => ({ valid: el.validity.valid, message: el.validationMessage })"
+        "el => ({ valueMissing: el.validity.valueMissing, message: el.validationMessage })"
     )
-    assert validity["valid"] is False
-    assert validity["message"] == "Please fill out this field."
+    # Native HTML5 validation message wording is browser/locale-specific (e.g. Chromium/Firefox
+    # say "Please fill out this field.", WebKit says "Fill out this field") - assert the
+    # behavior (blocked due to a missing required value, with some message shown), not the
+    # exact text.
+    assert validity["valueMissing"] is True
+    assert validity["message"] != ""
 
 
 @then("eu devo permanecer na pagina de adicionar produto")
