@@ -47,19 +47,6 @@ def browser_context_args(browser_context_args, pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def browser_type_launch_args(browser_type_launch_args, pytestconfig):
-    """Companion to the no_viewport override above: starts Chromium maximized
-    (to the real screen size) in --headed mode, instead of whatever small
-    default window size it would otherwise use. Combined with no_viewport,
-    this gives natural mouse-wheel/scrollbar scrolling with no dead space.
-    """
-    if pytestconfig.getoption("--headed"):
-        args = [*browser_type_launch_args.get("args", []), "--start-maximized"]
-        return {**browser_type_launch_args, "args": args}
-    return browser_type_launch_args
-
-
-@pytest.fixture(scope="session")
 def base_url():
     """Overrides pytest-playwright's base_url fixture.
 
