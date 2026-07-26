@@ -40,3 +40,15 @@ def click_buy_products(cart_page):
 @then("eu devo ser redirecionado para a página de pagamento externa do Stripe")
 def assert_redirected_to_stripe(page):
     expect(page).to_have_url(re.compile(r"checkout\.stripe\.com"), timeout=20000)
+
+
+@when("eu preencho os dados do cartão de teste do Stripe e confirmo o pagamento")
+def pay_with_stripe_test_card(stripe_checkout_page):
+    stripe_checkout_page.pay_with_test_card(
+        email="cliente-teste@example.com", billing_name="Cliente Teste"
+    )
+
+
+@then("eu devo ser redirecionado para a página de sucesso do pedido")
+def assert_redirected_to_order_success(page):
+    expect(page).to_have_url(re.compile(r".*/orders/success"), timeout=20000)

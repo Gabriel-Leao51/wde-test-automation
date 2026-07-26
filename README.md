@@ -23,7 +23,7 @@ O projeto abrange diferentes áreas e tipos de testes:
   - **Autenticação:** Tentativas de acesso a áreas administrativas por usuários não logados.
   - **Autorização:** Tentativas de acesso a áreas administrativas por usuários logados com perfil de "cliente" (não autorizado).
 - **Teste E2E (Fluxo do Cliente):**
-  - **Jornada de Compra:** Login do cliente, busca de produto, adição ao carrinho, checkout e redirecionamento completo até a página de pagamento (Stripe).
+  - **Jornada de Compra:** Login do cliente, busca de produto, adição ao carrinho, checkout, preenchimento do cartão de teste na página do Stripe e confirmação até a página de sucesso do pedido.
 
 ## 3. Tecnologias e Metodologias Utilizadas
 
@@ -231,7 +231,7 @@ Relatório Detalhado: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 
 **Migração de Cypress/Cucumber (JS) para Playwright/pytest-bdd (Python):** decisão documentada em detalhe no [ROADMAP.md](ROADMAP.md), incluindo o mapeamento passo a passo de cada padrão Cypress para seu equivalente em Playwright.
 
-**Automação de Pagamento Externo (Stripe) — limitação superada:** a versão em Cypress precisava de `cy.origin()` para validar apenas o redirecionamento para `checkout.stripe.com`, sem conseguir interagir com a página em si (cross-origin/iframes eram instáveis). O Playwright não tem essa limitação — navegação cross-origin é nativa — então o cenário `purchase_flow.feature` hoje valida o fluxo completo até o redirecionamento real para o Stripe, usando uma chave de teste (`sk_test_...`) de verdade.
+**Automação de Pagamento Externo (Stripe) — checkout completo:** a versão em Cypress precisava de `cy.origin()` para validar apenas o redirecionamento para `checkout.stripe.com`, sem conseguir interagir com a página em si (cross-origin/iframes eram instáveis). O Playwright não tem essa limitação — navegação cross-origin é nativa — e, na prática, os campos de cartão da página hospedada do Stripe renderizam diretamente no documento principal (não num iframe cross-origin), o que tornou a automação direta. O cenário `purchase_flow.feature` hoje completa o fluxo real: preenche o cartão de teste (`4242 4242 4242 4242`) usando uma chave de teste (`sk_test_...`) de verdade, confirma o pagamento e valida o redirecionamento até `/orders/success`. Testado e confiável nos 3 navegadores da matriz (Chromium, Firefox, WebKit) — o hCaptcha presente na página não bloqueou a automação em nenhum deles.
 
 **Bug de confiabilidade encontrado na aplicação (fora do escopo original de segurança):** ao validar o fluxo de compra localmente, uma falha na criação da sessão do Stripe (ex: chave inválida) derrubava o processo Node inteiro (`unhandled promise rejection` sem tratamento), tirando a aplicação do ar para todos os usuários. Corrigido diretamente no repositório `wde` (try/catch ao redor da chamada ao Stripe).
 
@@ -241,10 +241,6 @@ Relatório Detalhado: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 
 ## 11. Próximos Passos (Sugestões)
 
-Veja a seção "Fase 9" do [ROADMAP.md](ROADMAP.md) para a lista completa de melhorias habilitadas pela migração para Playwright, incluindo:
+Veja a seção "Fase 9" do [ROADMAP.md](ROADMAP.md) para a lista completa de melhorias habilitadas pela migração para Playwright. Já concluídas: matriz multi-browser (Chromium/Firefox/WebKit) no CI, execução paralela via `pytest-xdist`, checkout de teste do Stripe completo, e cobertura leve de API via `playwright.request` (usada nos testes de segurança). Resta:
 
-- Matriz multi-browser (Chromium/Firefox/WebKit) no CI.
-- Execução paralela via `pytest-xdist`.
-- Completar o checkout de teste do Stripe (preenchendo o cartão de teste), já que o Playwright lida melhor com iframes cross-origin.
 - Testes de regressão visual com `expect(page).to_have_screenshot()`.
-- Cobertura de API leve com `playwright.request`.

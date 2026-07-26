@@ -17,3 +17,5 @@ Funcionalidade: Fluxo de Compra E2E do Cliente
     Entao eu devo ver o produto "GTRACING - Black Gaming Chair" listado no carrinho
     Quando eu clico no botão "Buy Products"
     Entao eu devo ser redirecionado para a página de pagamento externa do Stripe
+    Quando eu preencho os dados do cartão de teste do Stripe e confirmo o pagamento
+    Entao eu devo ser redirecionado para a página de sucesso do pedido

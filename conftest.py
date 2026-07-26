@@ -8,6 +8,7 @@ from pages.cart_page import CartPage
 from pages.login_page import LoginPage
 from pages.orders_page import OrdersPage
 from pages.products_page import ProductsPage
+from pages.stripe_checkout_page import StripeCheckoutPage
 
 TEST_DATA_DIR = Path(__file__).resolve().parent / "test_data"
 
@@ -60,6 +61,11 @@ def cart_page(page):
 @pytest.fixture
 def orders_page(page):
     return OrdersPage(page)
+
+
+@pytest.fixture
+def stripe_checkout_page(page):
+    return StripeCheckoutPage(page)
 
 
 @pytest.fixture
