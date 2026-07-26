@@ -27,26 +27,6 @@ def pytest_bdd_apply_tag(tag, function):
 
 
 @pytest.fixture(scope="session")
-def browser_context_args(browser_context_args, pytestconfig):
-    """Only in --headed mode (incl. PWDEBUG=1/Inspector): disable Playwright's
-    fixed 1280x720 viewport so the page sizes itself to the real browser window
-    instead. Without this, content taller than 720px logical pixels can be
-    clipped by a physically shorter window (e.g. sharing screen space with the
-    Inspector panel) with no scroll able to reach it - resizing the OS window
-    doesn't help either, since the viewport is enforced via CDP regardless of
-    window size.
-
-    Left untouched (fixed viewport) for headless/CI runs: the app's CSS has a
-    768px responsive breakpoint (mobile nav vs desktop nav, see
-    wde/public/styles/navigation.css), and the whole suite's locators assume
-    the desktop layout the 1280x720 default guarantees.
-    """
-    if pytestconfig.getoption("--headed"):
-        return {**browser_context_args, "no_viewport": True}
-    return browser_context_args
-
-
-@pytest.fixture(scope="session")
 def base_url():
     """Overrides pytest-playwright's base_url fixture.
 
