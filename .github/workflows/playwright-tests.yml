@@ -87,6 +87,20 @@ jobs:
         # on one worker and keeps running in order (see conftest.py's pytest_bdd_apply_tag
         # hook + --dist=loadgroup in pyproject.toml).
 
+      - name: Run visual regression tests (chromium only)
+        if: matrix.browser == 'chromium'
+        env:
+          WDE_BASE_URL: http://localhost:3000
+        run: >
+          uv run pytest --browser=chromium -m visual
+          --html=playwright-report/visual-report.html
+          steps/test_visual_regression_steps.py
+        # Baselines in __snapshots__/ were generated on Linux (Playwright's official
+        # mcr.microsoft.com/playwright/python Docker image, matching ubuntu-latest's Noble
+        # base) since the plugin embeds sys.platform in snapshot filenames — Windows-
+        # generated baselines would never match here. Single browser only, to avoid
+        # tripling baseline maintenance across the matrix.
+
       - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -95,6 +109,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            snapshot_failures/
           retention-days: 7
 
       - name: Stop WDE app stack

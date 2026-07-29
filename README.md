@@ -24,6 +24,8 @@ O projeto abrange diferentes áreas e tipos de testes:
   - **Autorização:** Tentativas de acesso a áreas administrativas por usuários logados com perfil de "cliente" (não autorizado).
 - **Teste E2E (Fluxo do Cliente):**
   - **Jornada de Compra:** Login do cliente, busca de produto, adição ao carrinho, checkout, preenchimento do cartão de teste na página do Stripe e confirmação até a página de sucesso do pedido.
+- **Regressão Visual:**
+  - Comparação de screenshot vs. baseline aprovada em 5 páginas-chave: login, catálogo de produtos, detalhes de produto, painel administrativo de produtos e página de erro 401.
 
 ## 3. Tecnologias e Metodologias Utilizadas
 
@@ -34,6 +36,7 @@ O projeto abrange diferentes áreas e tipos de testes:
 - **Gerenciador de Pacotes:** [uv](https://docs.astral.sh/uv/)
 - **CI/CD:** GitHub Actions
 - **Relatórios:** `pytest-html` (relatório HTML autocontido), trace/vídeo/screenshot do Playwright retidos em falhas
+- **Regressão Visual:** [`pytest-playwright-visual-snapshot`](https://pypi.org/project/pytest-playwright-visual-snapshot/) (equivalente Python ao `to_have_screenshot()`, que só existe no test runner JS/TS)
 - **Gerenciamento de Dados:** Fixtures JSON (`test_data/`) para usuários e pedidos, imagem de teste para upload
 - **Aplicação alvo local:** Docker Compose ([repositório `wde`](https://github.com/Gabriel-Leao51/wde)) — app + MongoDB, com seed automático de dados
 - **Controle de Versão:** Git / GitHub
@@ -47,9 +50,12 @@ O projeto abrange diferentes áreas e tipos de testes:
 ├── conftest.py                 # base_url, fixtures de Page Objects e login
 ├── features/
 │   ├── admin/                  # Features de login, autenticação, autorização, produtos, pedidos
-│   └── client/                 # Feature do fluxo de compra
+│   ├── client/                 # Feature do fluxo de compra
+│   ├── security/                # Features de segurança avançada (hardening)
+│   └── visual/                  # Feature de regressão visual
 ├── steps/                      # Step definitions (pytest-bdd) + conftest.py com steps compartilhados
-├── pages/                      # Page Objects (LoginPage, ProductsPage, CartPage, OrdersPage)
+├── pages/                      # Page Objects (LoginPage, ProductsPage, CartPage, OrdersPage, StripeCheckoutPage)
+├── __snapshots__/              # Baselines de regressão visual (geradas em Linux — ver seção 7.9)
 ├── test_data/                  # Fixtures de dados (users.json, orders.json, mousepad.jpg)
 ├── utils/                      # Funções auxiliares (helpers.py)
 ├── docs/bugs/                  # Relatórios dos bugs encontrados
@@ -148,6 +154,24 @@ Além dos testes via UI/HTTP (Playwright), o cenário de prova de conceito do `B
 MONGODB_URI=mongodb://outro-host:27017 uv run pytest steps/test_security_hardening_steps.py
 ```
 
+### 7.9. Regressão visual (`features/visual/`)
+
+As baselines em `__snapshots__/` foram geradas em **Linux** (a mesma base Ubuntu Noble do runner `ubuntu-latest` do CI), porque o `pytest-playwright-visual-snapshot` grava o nome do arquivo com um valor fixo (não embutimos `sys.platform`, de propósito — ver ROADMAP, Fase 9). Renderização de fonte/anti-aliasing difere entre Windows e Linux, então rodar esses testes localmente no Windows sempre acusaria diferença, mesmo sem nenhuma mudança real de layout. Por isso:
+
+- **Por padrão, ficam fora da suíte local:** `addopts` já inclui `-m "not visual"`, então `uv run pytest` (seção 7.1) não os executa.
+- **No CI**, rodam explicitamente via `-m visual`, só no Chromium (para não triplicar a manutenção de baseline pela matriz).
+- **Para rodar ou atualizar as baselines**, use a imagem oficial do Playwright (mesma base do CI), conectada à rede Docker da aplicação:
+
+  ```bash
+  docker run --rm --network wde_default \
+    -v "$(pwd):/work" -w /work \
+    -e WDE_BASE_URL=http://wde-app-1:3000 \
+    mcr.microsoft.com/playwright/python:v1.61.0-noble \
+    bash -c "pip install --quiet pymongo pytest pytest-bdd pytest-html pytest-playwright pytest-xdist pytest-playwright-visual-snapshot && python -m pytest -m visual --browser chromium --update-snapshots steps/test_visual_regression_steps.py"
+  ```
+
+  Use `wde-app-1` (nome do container, não `app`) como host: o Chromium força HTTPS em qualquer host chamado literalmente `app` via HSTS preload do gTLD `.app`, o que quebra `http://app:3000`. Sem `--update-snapshots`, o mesmo comando compara contra a baseline existente.
+
 ## 8. Integração Contínua (CI/CD) com GitHub Actions
 
 O workflow está configurado em `.github/workflows/playwright-tests.yml` e realiza as seguintes etapas:
@@ -158,6 +182,7 @@ O workflow está configurado em `.github/workflows/playwright-tests.yml` e reali
 - **Matriz multi-browser:** roda o job completo 3 vezes em paralelo (Chromium, Firefox, WebKit), cada um com sua própria stack Docker isolada (evita interferência de concorrência entre browsers). `fail-fast: false` — a falha em um navegador não cancela os outros.
 - **Instalação:** `uv sync` + `playwright install --with-deps <browser-da-matriz>`.
 - **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`) em paralelo via `pytest-xdist` (ver seção 7.4) — `-n 4` para Chromium, `-n 2` para Firefox/WebKit (processos mais pesados, tiveram timeouts intermitentes em `-n 4` durante validação local). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
+- **Regressão visual:** roda como um passo extra, só na perna Chromium da matriz (`-m visual`, ver seção 7.9), comparando contra as baselines Linux versionadas em `__snapshots__/`.
 - **Bugs conhecidos como `@xfail`:** Os 3 cenários de `authorization.feature` que documentam `BUG-AUTH-001`/`BUG-AUTH-002` são marcados com a tag `@xfail` (com `xfail_strict` habilitado). Isso permite que o pipeline reporte sucesso normalmente enquanto continua executando e rastreando esses cenários — se algum dos bugs for corrigido, o cenário correspondente passa a `XPASS` e quebra o build, sinalizando a regressão em vez de passar despercebida.
 - **Upload do Artefato:** Disponibiliza o relatório HTML e os artefatos de falha (`playwright-report/`, `test-results/`) como artefato do build no GitHub Actions.
 
@@ -239,8 +264,8 @@ Relatório Detalhado: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 
 **Estrutura de Código:** manteve-se a mesma filosofia da versão em Cypress — Page Objects unificados (`pages/`) e Step Definitions organizadas por feature (`steps/`), com steps compartilhados (como o login parametrizado por papel) centralizados em `steps/conftest.py`.
 
+**Regressão visual — outro gap Python vs. JS/TS do Playwright:** assim como o "UI mode" (`--ui`), `expect(page).to_have_screenshot()` só existe no test runner JS/TS — confirmado por busca exaustiva na API Python instalada (`playwright/_impl/_assertions.py`, `playwright/sync_api/_generated.py`). O equivalente adotado foi o pacote de terceiros `pytest-playwright-visual-snapshot`. Como ele embute o nome da plataforma no arquivo de snapshot, gerar as baselines no Windows as tornaria inúteis para o CI (`ubuntu-latest`); a solução foi gerá-las dentro da própria imagem Docker oficial do Playwright, conectada à rede do `docker-compose.yml` da aplicação (ver seção 7.9). Isso também expôs um efeito colateral do Chromium: o nome de serviço `app` do Compose colide com a HSTS-preload do gTLD `.app`, forçando HTTPS e quebrando a conexão HTTP simples — contornado usando o nome do container (`wde-app-1`) em vez do nome do serviço.
+
 ## 11. Próximos Passos (Sugestões)
 
-Veja a seção "Fase 9" do [ROADMAP.md](ROADMAP.md) para a lista completa de melhorias habilitadas pela migração para Playwright. Já concluídas: matriz multi-browser (Chromium/Firefox/WebKit) no CI, execução paralela via `pytest-xdist`, checkout de teste do Stripe completo, e cobertura leve de API via `playwright.request` (usada nos testes de segurança). Resta:
-
-- Testes de regressão visual com `expect(page).to_have_screenshot()`.
+Veja a seção "Fase 9" do [ROADMAP.md](ROADMAP.md) para a lista completa de melhorias habilitadas pela migração para Playwright. Todos os itens já concluídos: matriz multi-browser (Chromium/Firefox/WebKit) no CI, execução paralela via `pytest-xdist`, checkout de teste do Stripe completo, cobertura leve de API via `playwright.request` (usada nos testes de segurança) e regressão visual (`features/visual/`, seção 7.9).

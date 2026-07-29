@@ -16,7 +16,7 @@ dependencies = [
 [tool.pytest.ini_options]
 testpaths = ["steps"]
 bdd_features_base_dir = "features"
-addopts = "--tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure --html=playwright-report/report.html --self-contained-html --dist=loadgroup"
+addopts = "--tracing=retain-on-failure --screenshot=only-on-failure --video=retain-on-failure --html=playwright-report/report.html --self-contained-html --dist=loadgroup -m \"not visual\""
 xfail_strict = true
 markers = [
     "auth: cenários de autenticação/autorização",
@@ -34,4 +34,11 @@ markers = [
     "csrf: cenários de proteção CSRF",
     "session: cenários de cookies/sessão",
     "error-handling: cenários de tratamento de erros",
+    "visual: cenários de regressão visual (screenshot vs. baseline)",
+]
+playwright_visual_snapshots_path = "__snapshots__"
+
+[dependency-groups]
+dev = [
+    "pytest-playwright-visual-snapshot>=0.5.1",
 ]
