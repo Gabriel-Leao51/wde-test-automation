@@ -1,39 +1,39 @@
-# Roadmap: Migração Cypress + Cucumber (JS) → Playwright + pytest-bdd (Python)
+# Roadmap: Cypress + Cucumber (JS) → Playwright + pytest-bdd (Python) Migration
 
-## 1. Contexto
+## 1. Context
 
-Este projeto (`wde_automacao`) contém uma suíte E2E em **Cypress + `@badeball/cypress-cucumber-preprocessor`**, testando a aplicação **WDE Shop** (`https://wde-5p3f.onrender.com`). Cobertura atual:
+This project (`wde_automacao`) contains an E2E suite in **Cypress + `@badeball/cypress-cucumber-preprocessor`**, testing the **WDE Shop** application (`https://wde-5p3f.onrender.com`). Current coverage:
 
-- **Admin:** login (happy/negative path), autenticação (401), autorização (403 / bugs conhecidos), CRUD de produtos, gerenciamento de pedidos.
-- **Cliente:** fluxo de compra E2E (login → produto → carrinho → redirecionamento Stripe).
-- **Achados de segurança documentados:** `BUG-AUTH-001` (bypass de autorização em `/admin/products`) e `BUG-AUTH-002` (vazamento de dados de pedidos em `/admin/orders`), com evidências em `evidence/`.
+- **Admin:** login (happy/negative path), authentication (401), authorization (403 / known bugs), product CRUD, order management.
+- **Customer:** E2E purchase flow (login → product → cart → Stripe redirect).
+- **Documented security findings:** `BUG-AUTH-001` (authorization bypass on `/admin/products`) and `BUG-AUTH-002` (order data leak on `/admin/orders`), with evidence in `evidence/`.
 
-Decisões já tomadas para a migração:
+Decisions already made for the migration:
 
-| Decisão | Escolha |
+| Decision | Choice |
 |---|---|
-| Linguagem | **Python** |
-| BDD | Manter Gherkin (`.feature`), via **pytest-bdd** |
-| Runner/Browser | **pytest-playwright** (Playwright oficial para Python) |
-| Gerenciador de pacotes | **uv** |
-| Modo de execução | Roadmap primeiro → implementação fase a fase |
+| Language | **Python** |
+| BDD | Keep Gherkin (`.feature`), via **pytest-bdd** |
+| Runner/Browser | **pytest-playwright** (official Playwright for Python) |
+| Package manager | **uv** |
+| Execution mode | Roadmap first → implementation phase by phase |
 
-Este é um projeto **novo por dentro** (troca de linguagem, não só de framework), mas mantém: os mesmos `.feature` em PT-BR, o mesmo Page Object Model, os mesmos dados de teste, e os mesmos relatórios de bugs/evidências — só a camada de execução muda.
+This is a project that's **new on the inside** (a language change, not just a framework change), but keeps: the same `.feature` files (now in English — see Phase 10), the same Page Object Model, the same test data, and the same bug reports/evidence — only the execution layer changes.
 
-## 2. Por que essa stack
+## 2. Why this stack
 
-- **pytest-bdd**: mapeia `.feature` para testes pytest via `@scenario`/`scenarios()`; ganha todo o ecossistema pytest (fixtures, `-n auto` com `pytest-xdist`, `pytest-html`, markers `@happy-path`/`@negative-path` como pytest marks).
-- **pytest-playwright**: plugin oficial (`page`, `browser`, `context` fixtures prontas; `--browser`, `--headed`, `--tracing`, `--video` via CLI).
-- **Simplificação real vs. Cypress**: o teste de checkout Stripe usava `cy.origin()` para contornar a limitação de cross-origin do Cypress e mesmo assim não conseguia interagir com o iframe do Stripe. Playwright **não tem essa limitação** — navegação cross-origin e iframes são nativos. Isso abre a possibilidade de, no futuro, completar o fluxo de pagamento de teste (ver Fase 9).
+- **pytest-bdd**: maps `.feature` files to pytest tests via `@scenario`/`scenarios()`; gains the whole pytest ecosystem (fixtures, `-n auto` with `pytest-xdist`, `pytest-html`, `@happy-path`/`@negative-path` markers as pytest marks).
+- **pytest-playwright**: official plugin (`page`, `browser`, `context` fixtures ready to use; `--browser`, `--headed`, `--tracing`, `--video` via CLI).
+- **Real simplification vs. Cypress**: the Stripe checkout test used `cy.origin()` to work around Cypress's cross-origin limitation and still couldn't interact with Stripe's iframe. Playwright **doesn't have this limitation** — cross-origin navigation and iframes are native. This opened up the possibility of, in the future, completing the test payment flow (see Phase 9).
 
-## 3. Estrutura de diretórios proposta
+## 3. Proposed directory structure
 
 ```
 wde_automacao/
 ├── pyproject.toml              # uv + pytest + pytest-bdd + pytest-playwright
 ├── uv.lock
-├── pytest.ini                  # ou [tool.pytest.ini_options] no pyproject
-├── conftest.py                 # base_url, fixtures de login/role, paths de feature
+├── pytest.ini                  # or [tool.pytest.ini_options] in pyproject
+├── conftest.py                 # base_url, login/role fixtures, feature paths
 ├── features/
 │   ├── admin/
 │   │   ├── authentication.feature
@@ -57,121 +57,155 @@ wde_automacao/
 │   ├── products_page.py
 │   ├── cart_page.py
 │   └── orders_page.py
-├── test_data/                  # equivalente a cypress/fixtures
+├── test_data/                  # equivalent to cypress/fixtures
 │   ├── users.json
 │   ├── orders.json
 │   └── mousepad.jpg
 ├── utils/
 │   └── helpers.py              # format_product_data()
-├── docs/bugs/                  # mantido como está
-├── evidence/                   # mantido como está
+├── docs/bugs/                  # kept as-is
+├── evidence/                   # kept as-is
 ├── .github/workflows/
 │   └── playwright-tests.yml
-└── README.md                   # reescrito para a stack Python
+└── README.md                   # rewritten for the Python stack
 ```
 
-`features/` fica separado de `steps/` (diferente do Cypress, que unificava tudo em `support/`) porque é o padrão idiomático do pytest-bdd e evita ambiguidade entre "step definition" e "test file" do pytest.
+`features/` is kept separate from `steps/` (unlike Cypress, which unified everything under `support/`) because that's the idiomatic pytest-bdd pattern and avoids ambiguity between "step definition" and "test file" in pytest.
 
-## 4. Mapeamento Cypress → Playwright/pytest-bdd
+## 4. Cypress → Playwright/pytest-bdd Mapping
 
-| Cypress | Playwright/Python | Observação |
+| Cypress | Playwright/Python | Notes |
 |---|---|---|
-| `cy.visit(path)` | `page.goto(path)` | `base_url` via `pytest-playwright` (`--base-url` ou fixture) |
-| `cy.get(selector)` | `page.locator(selector)` | preferir `get_by_role`/`get_by_label`/`get_by_text` onde fizer sentido |
-| `cy.contains(sel, text)` | `page.locator(sel).filter(has_text=text)` ou `get_by_text` | |
-| `.type(text)` | `.fill(text)` | Playwright não precisa de `.clear()` antes — `fill` já substitui |
+| `cy.visit(path)` | `page.goto(path)` | `base_url` via `pytest-playwright` (`--base-url` or fixture) |
+| `cy.get(selector)` | `page.locator(selector)` | prefer `get_by_role`/`get_by_label`/`get_by_text` where it makes sense |
+| `cy.contains(sel, text)` | `page.locator(sel).filter(has_text=text)` or `get_by_text` | |
+| `.type(text)` | `.fill(text)` | Playwright doesn't need `.clear()` first — `fill` already replaces |
 | `.selectFile(path)` | `.set_input_files(path)` | |
-| `.should('be.visible')` | `expect(locator).to_be_visible()` | `playwright.sync_api.expect`, com auto-retry embutido |
-| `cy.intercept()` + `cy.wait('@alias')` | `with page.expect_response(url_pattern) as resp_info:` | bloco `with` em volta da ação que dispara a request |
-| `cy.origin('https://checkout.stripe.com', ...)` | nada especial — `page.wait_for_url("**checkout.stripe.com**")` | Playwright lida com cross-origin nativamente |
-| `cy.fixture('users.json')` | `json.load(open("test_data/users.json"))` via fixture pytest | |
-| Page Objects (classes JS, `export default new X()`) | classes Python recebendo `page: Page` no `__init__` | instanciadas via fixture pytest (`@pytest.fixture def login_page(page): return LoginPage(page)`) |
-| `element.validity.valid` / `validationMessage` | `locator.evaluate("el => el.validity.valid")` | mesma abordagem, via `evaluate` |
-| Tags Gherkin (`@crud @product @happy-path`) | marks pytest via `pytest-bdd` (`pytest.mark.crud` etc.) | permite `pytest -m happy_path` |
-| `multiple-cucumber-html-reporter` | `pytest-html` (Fase 6) ou `allure-pytest-bdd` (stretch) | ver Fase 6 |
-| `cypress-io/github-action` | `astral-sh/setup-uv` + `playwright install --with-deps` | ver Fase 7 |
+| `.should('be.visible')` | `expect(locator).to_be_visible()` | `playwright.sync_api.expect`, with built-in auto-retry |
+| `cy.intercept()` + `cy.wait('@alias')` | `with page.expect_response(url_pattern) as resp_info:` | `with` block wrapping the action that triggers the request |
+| `cy.origin('https://checkout.stripe.com', ...)` | nothing special — `page.wait_for_url("**checkout.stripe.com**")` | Playwright handles cross-origin natively |
+| `cy.fixture('users.json')` | `json.load(open("test_data/users.json"))` via a pytest fixture | |
+| Page Objects (JS classes, `export default new X()`) | Python classes receiving `page: Page` in `__init__` | instantiated via a pytest fixture (`@pytest.fixture def login_page(page): return LoginPage(page)`) |
+| `element.validity.valid` / `validationMessage` | `locator.evaluate("el => el.validity.valid")` | same approach, via `evaluate` |
+| Gherkin tags (`@crud @product @happy-path`) | pytest marks via pytest-bdd (`pytest.mark.crud` etc.) | enables `pytest -m happy_path` |
+| `multiple-cucumber-html-reporter` | `pytest-html` (Phase 6) or `allure-pytest-bdd` (stretch) | see Phase 6 |
+| `cypress-io/github-action` | `astral-sh/setup-uv` + `playwright install --with-deps` | see Phase 7 |
 
-## 5. Fases
+## 5. Phases
 
-### Fase 0 — Scaffolding do projeto
-- [x] `uv init`, `pyproject.toml` com Python ≥ 3.11
-- [x] Dependências: `pytest`, `pytest-bdd`, `pytest-playwright`, `playwright`
+### Phase 0 — Project scaffolding
+- [x] `uv init`, `pyproject.toml` with Python ≥ 3.11
+- [x] Dependencies: `pytest`, `pytest-bdd`, `pytest-playwright`, `playwright`
 - [x] `uv run playwright install --with-deps chromium`
-- [x] Estrutura de pastas (seção 3), `.gitignore` atualizado (`.venv/`, `__pycache__/`, `test-results/`, `playwright-report/`)
-- [x] `conftest.py` com fixture `base_url` (`https://wde-5p3f.onrender.com`)
+- [x] Directory structure (section 3), updated `.gitignore` (`.venv/`, `__pycache__/`, `test-results/`, `playwright-report/`)
+- [x] `conftest.py` with a `base_url` fixture (`https://wde-5p3f.onrender.com`)
 
-**Pronto quando:** `uv run pytest --collect-only` roda sem erro (mesmo sem testes ainda).
+**Done when:** `uv run pytest --collect-only` runs with no errors (even with no tests yet).
 
-### Fase 1 — Infraestrutura central (dados + Page Objects)
-- [x] Portar `users.json`, `orders.json`, `mousepad.jpg` → `test_data/`
-- [x] Portar `helpers.js` → `utils/helpers.py` (`format_product_data`)
-- [x] Page Objects Python: `LoginPage`, `ProductsPage`, `CartPage`, `OrdersPage`
-- [x] Fixture de login parametrizada por papel (`admin`/`cliente`), equivalente ao `commonSteps.js`
+### Phase 1 — Core infrastructure (data + Page Objects)
+- [x] Port `users.json`, `orders.json`, `mousepad.jpg` → `test_data/`
+- [x] Port `helpers.js` → `utils/helpers.py` (`format_product_data`)
+- [x] Python Page Objects: `LoginPage`, `ProductsPage`, `CartPage`, `OrdersPage`
+- [x] Role-parameterized login fixture (`admin`/`customer`), equivalent to `commonSteps.js`
 
-**Pronto quando:** Page Objects têm cobertura de smoke manual (script solto ou teste único de login).
+**Done when:** Page Objects have manual smoke coverage (a scratch script or a single login test).
 
-### Fase 2 — Login e segurança (admin)
+### Phase 2 — Login and security (admin)
 - [x] `login.feature`, `authentication.feature`, `authorization.feature`
 - [x] `test_admin_login_steps.py`, `test_security_steps.py`, `test_common_steps.py`
-- [x] Confirmar que os 2 bugs conhecidos (`BUG-AUTH-001`, `BUG-AUTH-002`) ainda reproduzem igual (mesmos cenários "devem falhar")
+- [x] Confirm the 2 known bugs (`BUG-AUTH-001`, `BUG-AUTH-002`) still reproduce the same way (same "must fail" scenarios)
 
-**Pronto quando:** os cenários rodam contra o app publicado e o resultado (pass/fail) bate com o comportamento documentado nos relatórios de bug.
+**Done when:** the scenarios run against the deployed app and the result (pass/fail) matches the behavior documented in the bug reports.
 
-### Fase 3 — CRUD de produtos (admin)
+### Phase 3 — Product CRUD (admin)
 - [x] `manage_product.feature` + `test_manage_product_steps.py`
-- [x] `fillProductForm` → método Python no `ProductsPage` (mapa de campos igual ao original)
-- [x] Validação de campo obrigatório via `validity`/`validationMessage`
+- [x] `fillProductForm` → Python method on `ProductsPage` (same field map as the original)
+- [x] Required field validation via `validity`/`validationMessage`
 
-**Pronto quando:** os 4 cenários (add, edit, delete, validação) passam de ponta a ponta.
+**Done when:** all 4 scenarios (add, edit, delete, validation) pass end to end.
 
-### Fase 4 — Gerenciamento de pedidos (admin)
+### Phase 4 — Order management (admin)
 - [x] `manage_orders.feature` + `test_manage_orders_steps.py`
-- [x] Troca de `cy.intercept`/`cy.wait` por `page.expect_response`
+- [x] Swap `cy.intercept`/`cy.wait` for `page.expect_response`
 
-**Pronto quando:** update de status reflete no badge, aguardando a resposta de rede real (não um `sleep`).
+**Done when:** a status update reflects in the badge, waiting for the real network response (not a `sleep`).
 
-### Fase 5 — Fluxo de compra do cliente (E2E + Stripe)
+### Phase 5 — Customer purchase flow (E2E + Stripe)
 - [x] `purchase_flow.feature` + `test_purchase_flow_steps.py`
-- [x] Reproduzir o comportamento atual (parar na confirmação de redirecionamento ao domínio Stripe)
-- [x] Registrar como "stretch" (Fase 9) a possibilidade de ir além, já que Playwright lida melhor com iframes/cross-origin
+- [x] Reproduce current behavior (stop at confirming the redirect to Stripe's domain)
+- [x] Record as a "stretch" (Phase 9) the possibility of going further, since Playwright handles iframes/cross-origin better
 
-**Pronto quando:** cenário passa e gera o mesmo pedido de teste que hoje permite validar `BUG-AUTH-002` manualmente.
+**Done when:** the scenario passes and generates the same test order that today allows manually validating `BUG-AUTH-002`.
 
-### Fase 6 — Relatórios e artefatos de falha
-- [x] Escolher entre `pytest-html` (simples) ou `allure-pytest-bdd` (visual, mais próximo do Cucumber HTML atual) — sugestão: começar com `pytest-html`, migrar para Allure se quiser algo mais "portfolio-ready"
-- [x] Configurar `--tracing=retain-on-failure --video=retain-on-failure --screenshot=only-on-failure` (equivalente ao `video: true` do Cypress, mas só guarda em falha)
+### Phase 6 — Reports and failure artifacts
+- [x] Choose between `pytest-html` (simple) or `allure-pytest-bdd` (visual, closer to the current Cucumber HTML report) — suggestion: start with `pytest-html`, migrate to Allure if something more "portfolio-ready" is wanted
+- [x] Configure `--tracing=retain-on-failure --video=retain-on-failure --screenshot=only-on-failure` (equivalent to Cypress's `video: true`, but only retained on failure)
 
-**Pronto quando:** uma falha proposital gera trace/vídeo/screenshot recuperável localmente.
+**Done when:** a deliberate failure generates a recoverable trace/video/screenshot locally.
 
-### Fase 7 — CI/CD (GitHub Actions)
-- [x] Novo workflow `playwright-tests.yml`: setup Python + `uv`, `uv sync`, `playwright install --with-deps`
-- [x] Manter a mesma exclusão estratégica de CI (sem `purchase_flow` e `manage_orders` no pipeline padrão, mesmo motivo: evitar dados persistentes)
-- [x] Upload de artefatos (`playwright-report/`, `test-results/`)
-- [x] Atualizar badge no README
+### Phase 7 — CI/CD (GitHub Actions)
+- [x] New `playwright-tests.yml` workflow: Python + `uv` setup, `uv sync`, `playwright install --with-deps`
+- [x] Keep the same strategic CI exclusion (no `purchase_flow` or `manage_orders` in the standard pipeline, same reason: avoid persistent data)
+- [x] Artifact upload (`playwright-report/`, `test-results/`)
+- [x] Update the README badge
 
-**Pronto quando:** PR de teste dispara o workflow e o artefato de relatório fica disponível no Actions.
+**Done when:** a test PR triggers the workflow and the report artifact is available on Actions.
 
-### Fase 8 — Documentação e limpeza
-- [x] Reescrever `README.md` (stack, estrutura, instalação via `uv sync`, execução via `uv run pytest`)
-- [x] Manter `docs/bugs/` e `evidence/` (ainda válidos, só ajustar referências de comando se citarem Cypress)
-- [x] Antes de remover `cypress/`, `cypress.config.js`, `generate-cucumber-report.js`, `cucumber-messages.ndjson`: criar tag/branch `legacy-cypress` para preservar histórico consultável
+### Phase 8 — Documentation and cleanup
+- [x] Rewrite `README.md` (stack, structure, install via `uv sync`, run via `uv run pytest`)
+- [x] Keep `docs/bugs/` and `evidence/` (still valid, just update command references if they mention Cypress)
+- [x] Before removing `cypress/`, `cypress.config.js`, `generate-cucumber-report.js`, `cucumber-messages.ndjson`: create a `legacy-cypress` tag/branch to preserve searchable history
 
-**Pronto quando:** README reflete só a stack nova, e a suíte Cypress antiga está preservada em `legacy-cypress` mas fora do diretório principal.
+**Done when:** the README only reflects the new stack, and the old Cypress suite is preserved on `legacy-cypress` but out of the main directory.
 
-### Fase 9 — Melhorias habilitadas pelo Playwright (stretch, pós-paridade)
-- [x] Matriz multi-browser (chromium/firefox/webkit) no CI — Cypress hoje só roda Chrome. Achado: Firefox e WebKit sobem processos mais pesados que o Chromium e tiveram timeouts intermitentes em `-n 4`; `-n 2` foi confiável para ambos. Também expôs um teste com texto de validação HTML5 hardcoded para o wording específico do Chromium (`"Please fill out this field."`) — WebKit usa `"Fill out this field"`; corrigido para checar `validity.valueMissing` + mensagem não-vazia, sem fixar o texto exato.
-- [x] Execução paralela via `pytest-xdist` — `--dist=loadgroup` (pyproject.toml) + tag `@xdist_group_product_crud` nos 3 primeiros cenários de `manage_product.feature`, mapeada para `pytest.mark.xdist_group(name="product_crud")` via hook `pytest_bdd_apply_tag` em `conftest.py`. Achado: `-n auto` (todos os cores) causa timeouts intermitentes contra o app local (processo Node/Mongo único, sem escalonamento) — `-n 4` é o teto recomendado, validado em múltiplas execuções limpas. Também expôs e corrigiu 3 locators sem escopo (`Manage Products`/`Manage Orders`/`Logout`/`Orders` casavam tanto o header quanto o menu mobile) que só viravam flake sob concorrência.
-- [x] Tentar completar o checkout de teste do Stripe (cartão de teste `4242...`) já que Playwright lida melhor com iframes cross-origin — feito. Achado: os campos de cartão da página hospedada do Stripe (`checkout.stripe.com`) renderizam no documento principal, não num iframe cross-origin, então nem foi preciso lidar com `frame_locator`. Confirmado funcionando nos 3 navegadores da matriz; hCaptcha presente na página não bloqueou a automação com o cartão de teste.
-- [x] Testes de regressão visual — Achado: `expect(page).to_have_screenshot()` **não existe** na API Python do Playwright (só no test runner JS/TS, mesma classe de gap já vista com "UI mode"); confirmado via grep exaustivo em `_assertions.py`/`_generated.py`. Adotado `pytest-playwright-visual-snapshot` (fixture `assert_snapshot`) como equivalente. 5 páginas cobertas em `features/visual/visual_regression.feature`: login, catálogo, detalhes de produto, admin/manage products, erro 401. Achado 2: o plugin nomeia snapshots com `sys.platform` embutido — baselines geradas no Windows nunca bateriam com o `ubuntu-latest` do CI; baselines foram geradas rodando a suíte dentro da imagem oficial `mcr.microsoft.com/playwright/python` (mesma base Ubuntu Noble do runner), conectada à rede Docker do app (`wde_default`). Achado 3: o hostname `app` do Compose aciona a HSTS-preload do Chromium para o gTLD `.app`, forçando HTTPS e quebrando `http://app:3000` — contornado apontando para o nome real do container (`wde-app-1`). Os testes visuais ficam fora da suíte padrão local (`-m "not visual"` em `addopts`) e só rodam no CI via `-m visual`, já que dependem de baseline Linux.
-- [x] Cobertura de API leve com `playwright.request` — feito como parte da suíte de segurança avançada: o cenário do `BUG-SEC-005` usa `playwright.request.new_context()` para enviar apenas o cookie forjado (sem sessão de browser real) e validar a resposta HTTP direta de `GET /admin/products`.
+### Phase 9 — Improvements enabled by Playwright (stretch, post-parity)
+- [x] Multi-browser matrix (chromium/firefox/webkit) in CI — Cypress only ran Chrome today. Finding: Firefox and WebKit spawn heavier processes than Chromium and had intermittent timeouts at `-n 4`; `-n 2` was reliable for both. Also exposed a test with hardcoded HTML5 validation text for Chromium's specific wording (`"Please fill out this field."`) — WebKit uses `"Fill out this field"`; fixed to check `validity.valueMissing` + a non-empty message, without pinning the exact text.
+- [x] Parallel execution via `pytest-xdist` — `--dist=loadgroup` (pyproject.toml) + the `@xdist_group_product_crud` tag on the first 3 scenarios of `manage_product.feature`, mapped to `pytest.mark.xdist_group(name="product_crud")` via the `pytest_bdd_apply_tag` hook in `conftest.py`. Finding: `-n auto` (all cores) causes intermittent timeouts against the local app (a single Node/Mongo process, no scaling) — `-n 4` is the recommended ceiling, validated across multiple clean runs. Also exposed and fixed 3 unscoped locators (`Manage Products`/`Manage Orders`/`Logout`/`Orders` matched both the header and the mobile menu) that only turned into flakiness under concurrency.
+- [x] Attempt to complete the Stripe test checkout (test card `4242...`) since Playwright handles cross-origin iframes better — done. Finding: the hosted Stripe page's (`checkout.stripe.com`) card fields render in the main document, not a cross-origin iframe, so `frame_locator` wasn't even needed. Confirmed working across all 3 matrix browsers; the hCaptcha present on the page didn't block automation with the test card.
+- [x] Visual regression tests — Finding: `expect(page).to_have_screenshot()` **doesn't exist** in Playwright's Python API (only in the JS/TS test runner, the same class of gap already seen with "UI mode"); confirmed via an exhaustive grep of `_assertions.py`/`_generated.py`. Adopted `pytest-playwright-visual-snapshot` (the `assert_snapshot` fixture) as the equivalent. 5 pages covered in `features/visual/visual_regression.feature`: login, catalog, product details, admin/manage products, 401 error. Finding 2: the plugin embeds `sys.platform` in the snapshot name — baselines generated on Windows would never match CI's `ubuntu-latest`; baselines were generated by running the suite inside the official `mcr.microsoft.com/playwright/python` image (same Ubuntu Noble base as the runner), connected to the app's Docker network (`wde_default`). Finding 3: Compose's `app` hostname triggers Chromium's HSTS preload for the `.app` gTLD, forcing HTTPS and breaking `http://app:3000` — worked around by pointing at the container's real name (`wde-app-1`). Visual tests stay out of the standard local suite (`-m "not visual"` in `addopts`) and only run in CI via `-m visual`, since they depend on a Linux baseline.
+- [x] Lightweight API coverage with `playwright.request` — done as part of the advanced security suite: the `BUG-SEC-005` scenario uses `playwright.request.new_context()` to send only the forged cookie (no real browser session) and validate the direct HTTP response from `GET /admin/products`.
 
-## 6. Riscos / pontos de atenção
+## 6. Risks / points of attention
 
-- **Mudança de linguagem = zero reaproveitamento de código**, só de estrutura/lógica. Cada step precisa ser reescrito, não só traduzido 1:1.
-- **App alvo é um deploy gratuito no Render** (`wde-5p3f.onrender.com`) — pode hibernar/cold-start; considerar `timeout` maior no primeiro `goto` de cada sessão de CI.
-- **`manage_orders.feature` depende de um `testOrderId` fixo** (`orders.json`) — se esse pedido for removido/alterado no banco do app, o cenário quebra independente da migração.
-- **Bugs de autorização são o "produto" deste portfólio** — qualquer step de segurança precisa ser validado com atenção extra para não mascarar acidentalmente o bug real durante a reescrita.
+- **Language change = zero code reuse**, only structure/logic reuse. Every step had to be rewritten, not just translated 1:1.
+- **The target app is a free Render deployment** (`wde-5p3f.onrender.com`) — may hibernate/cold-start; consider a longer `timeout` on each CI session's first `goto`. (Superseded — see Phase 10: the app now runs locally via Docker.)
+- **`manage_orders.feature` depends on a fixed `testOrderId`** (`orders.json`) — if that order is removed/changed in the app's database, the scenario breaks independent of the migration.
+- **Authorization bugs are this portfolio's "product"** — any security step needs extra-careful validation so as not to accidentally mask the real bug while rewriting it.
 
-## 7. Próximo passo imediato
+## 7. Immediate next step (historical)
 
-Começar pela **Fase 0** (scaffolding) assim que este roadmap for aprovado.
+Start with **Phase 0** (scaffolding) once this roadmap is approved.
+
+---
+
+## Phase 10 — i18n, catalog overhaul, feature expansion & email integration
+
+Full plan approved via `/plan` on 2026-07-29 (see conversation history / plan artifact for the complete rationale). Summary:
+
+### Context
+
+Two more goals surfaced after Phase 9 wrapped up:
+1. Make the project read as English-first (the user now works internationally). This repository (`wde_automacao`) was ~100% Portuguese (feature files, docs, step-matcher strings) — the `wde` app itself was already 100% English code/UI.
+2. Expand `wde` itself, inspired by the darkartswizard.com "Automation Tools Checklist", covering UI element patterns the app doesn't exercise yet, a real product catalog (today only 3 products), and email-based flows (order confirmation, OTP login).
+
+Key decisions:
+- Stay on **Python** for the test suite (evaluated switching to TypeScript; nothing in the new scope — Mailpit's HTTP API, OTP, catalog filter/sort, i18n — needs a JS/TS-exclusive Playwright feature).
+- Add a real **bilingual language selector** to `wde` (English default, Portuguese-BR toggle), hand-rolled (no `i18next`) given the app's existing no-bundler, vanilla-JS/EJS convention.
+- Catalog images: **generated placeholders**, not stock photos (no licensing risk, no external network dependency during seeding).
+- Email testing via **Mailpit** (local SMTP catcher + REST API), read back in tests via `playwright.request` — the same pattern already proven in the `BUG-SEC-005` PoC.
+
+### Tracks
+
+- [x] **Track 1** — Convert `wde_automacao` to English (this document, `README.md`, `docs/bugs/*.md`, every `.feature` file, step-matcher strings, comments, the `"cliente"` → `"customer"` role key).
+- [ ] **Track 2** — `wde`: i18n infrastructure, language selector, localized product catalog copy.
+- [ ] **Track 3** — `wde_automacao`: language-selector scenarios (a `Scenario Outline`/`Examples` first for this suite).
+- [ ] **Track 4** — Catalog overhaul, sub-phased deliberately slowly:
+  - [ ] 4a. `department` field + a meaningfully larger seed catalog with generated placeholder thumbnails
+  - [ ] 4b. Backend filter/sort (`?department=&sort=`)
+  - [ ] 4c. Frontend filter/sort UI
+  - [ ] 4d. Live search / combobox (`GET /api/products/search`)
+- [ ] **Track 5** — Remaining targeted UI-pattern features: confirmation modal, toast notifications, sortable admin orders table, date picker, drag-and-drop image upload, rich text editor for product description, PDF invoice download.
+- [ ] **Track 6** — Email integration: Mailpit infra, order confirmation email, additive OTP login flow.
+- [ ] **Track 7** — Docs/CI wrap-up across both repos.
+
+Each track/sub-phase is reviewed, committed, pushed, and CI-verified before moving to the next — same workflow as Phase 9.

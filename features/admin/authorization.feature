@@ -1,26 +1,26 @@
-# language: pt
-Funcionalidade: Segurança - Autorização do Painel Administrativo
-  Como um usuário cliente logado (sem permissões de admin)
-  Eu não devo conseguir acessar páginas ou funcionalidades do painel administrativo
-  Para garantir que apenas administradores gerenciem a loja
+# language: en
+Feature: Security - Admin Panel Authorization
+  As a logged-in customer user (without admin permissions)
+  I must not be able to access admin panel pages or functionality
+  To ensure only administrators can manage the store
 
-  Contexto: Usuário cliente logado
-    Dado que eu estou logado como "cliente"
+  Background: Logged-in customer user
+    Given I am logged in as "customer"
 
-  # BUG CONHECIDO (BUG-AUTH-001): Este cenário DEVE FALHAR se o bug persistir
+  # KNOWN BUG (BUG-AUTH-001): This scenario MUST FAIL if the bug persists
   @xfail
-  Cenario: Tentativa de acesso direto a Produtos do Admin por usuário cliente
-    Quando eu tento acessar a URL "/admin/products"
-    Então eu NÃO devo conseguir acessar a página de Produtos do Admin
+  Scenario: Attempt to directly access Admin Products as a customer user
+    When I try to access the URL "/admin/products"
+    Then I should NOT be able to access the Admin Products page
 
-  # BUG CONHECIDO (BUG-AUTH-002): Este cenário DEVE FALHAR se o bug persistir
+  # KNOWN BUG (BUG-AUTH-002): This scenario MUST FAIL if the bug persists
   @xfail
-  Cenario: Tentativa de acesso direto a Pedidos do Admin por usuário cliente
-    Quando eu tento acessar a URL "/admin/orders"
-    Então eu devo ver uma mensagem indicando falta de autorização
+  Scenario: Attempt to directly access Admin Orders as a customer user
+    When I try to access the URL "/admin/orders"
+    Then I should see a message indicating lack of authorization
 
-  # BUG CONHECIDO (BUG-AUTH-001): Este cenário DEVE FALHAR se o bug persistir
+  # KNOWN BUG (BUG-AUTH-001): This scenario MUST FAIL if the bug persists
   @xfail
-  Cenario: Tentativa de acesso direto ao formulário de Edição de Produto por usuário cliente
-    Quando eu tento acessar a URL "/admin/products/000000000000000000000001"
-    Então eu NÃO devo conseguir acessar o formulário de Edição de Produto
+  Scenario: Attempt to directly access the Edit Product form as a customer user
+    When I try to access the URL "/admin/products/000000000000000000000001"
+    Then I should NOT be able to access the Edit Product form

@@ -1,45 +1,45 @@
-# BUG-SEC-002: Ausência de Headers HTTP de Segurança
+# BUG-SEC-002: Missing HTTP Security Headers
 
-## Severidade
+## Severity
 
-**MÉDIA**
+**MEDIUM**
 
-- **Justificativa:** Nenhum header de segurança padrão de mercado está presente nas respostas HTTP. Isoladamente cada ausência é de risco moderado, mas em conjunto deixam a aplicação sem defesas em profundidade contra clickjacking, MIME-sniffing, e reduzem a eficácia de outras mitigações (como CSP contra XSS). O header `X-Powered-By: Express` também facilita fingerprinting da stack tecnológica.
+- **Justification:** None of the standard security headers are present in HTTP responses. Each absence is moderate risk on its own, but together they leave the application without defense-in-depth against clickjacking, MIME-sniffing, and reduce the effectiveness of other mitigations (like CSP against XSS). The `X-Powered-By: Express` header also makes fingerprinting the technology stack easier.
 
-## Prioridade
+## Priority
 
-**MÉDIA**
+**MEDIUM**
 
-## Ambiente
+## Environment
 
-- **Aplicação:** WDE Shop
-- **URL Base:** `http://localhost:3000`
-- **Endpoint Afetado:** todas as rotas (testado em `/products`, mas o comportamento é da configuração global do Express)
+- **Application:** WDE Shop
+- **Base URL:** `http://localhost:3000`
+- **Affected Endpoint:** all routes (tested on `/products`, but the behavior comes from the global Express configuration)
 
-## Detalhes do Relato
+## Report Details
 
-- **Relatado por:** Gabriel Leão (com assistência de Claude)
-- **Data da Descoberta:** 24/07/2026
+- **Reported by:** Gabriel Leão (with assistance from Claude)
+- **Date discovered:** 2026-07-24
 
-## Passos para Reproduzir
+## Steps to Reproduce
 
 ```bash
 curl -I http://localhost:3000/products
 ```
 
-## Resultado Esperado
+## Expected Result
 
-Presença de headers de segurança padrão, por exemplo:
+Presence of standard security headers, for example:
 
 - `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY` (ou `SAMEORIGIN`)
+- `X-Frame-Options: DENY` (or `SAMEORIGIN`)
 - `Content-Security-Policy: ...`
 - `Referrer-Policy: ...`
-- Ausência do header `X-Powered-By`
+- Absence of the `X-Powered-By` header
 
-## Resultado Atual (Falha)
+## Actual Result (Failure)
 
-Resposta real capturada:
+Real captured response:
 
 ```
 HTTP/1.1 200 OK
@@ -53,26 +53,26 @@ Connection: keep-alive
 Keep-Alive: timeout=5
 ```
 
-Nenhum header de segurança está presente, e `X-Powered-By: Express` revela a stack tecnológica.
+No security header is present, and `X-Powered-By: Express` reveals the technology stack.
 
-## Evidências
+## Evidence
 
-- **Teste Automatizado:** `features/security/hardening.feature`, cenário "A aplicação deve responder com headers de segurança padrão" (`@xfail`, tag `@headers`).
-- **Reprodução manual:** comando `curl -I` acima.
+- **Automated Test:** `features/security/hardening.feature`, scenario "The application should respond with standard security headers" (`@xfail`, tag `@headers`).
+- **Manual reproduction:** the `curl -I` command above.
 
-## Análise de Causa Raiz
+## Root Cause Analysis
 
-Nenhum middleware de segurança (ex: [`helmet`](https://helmetjs.github.io/)) está registrado em `app.js`. Não há configuração manual de headers de segurança em nenhum ponto da aplicação.
+No security middleware (e.g. [`helmet`](https://helmetjs.github.io/)) is registered in `app.js`. There's no manual security-header configuration anywhere in the application.
 
-## Impacto Potencial
+## Potential Impact
 
-- Sem `X-Frame-Options`/`frame-ancestors` (CSP), a aplicação pode ser embutida em um `<iframe>` de um site malicioso (clickjacking).
-- Sem `X-Content-Type-Options: nosniff`, navegadores podem tentar adivinhar o tipo de conteúdo de respostas, abrindo espaço para ataques de MIME-sniffing.
-- Sem CSP, não há camada de defesa adicional caso um vetor de XSS seja encontrado no futuro.
-- `X-Powered-By: Express` facilita a um atacante identificar rapidamente a stack e buscar vulnerabilidades conhecidas específicas do framework/versão.
+- Without `X-Frame-Options`/`frame-ancestors` (CSP), the application can be embedded in an `<iframe>` on a malicious site (clickjacking).
+- Without `X-Content-Type-Options: nosniff`, browsers may try to guess the content type of responses, opening the door to MIME-sniffing attacks.
+- Without CSP, there's no additional defense layer if an XSS vector is found in the future.
+- `X-Powered-By: Express` makes it easy for an attacker to quickly identify the stack and look for framework/version-specific known vulnerabilities.
 
-## Recomendações
+## Recommendations
 
-1. Adicionar [`helmet`](https://www.npmjs.com/package/helmet) como dependência e registrá-lo no início da cadeia de middlewares em `app.js` — cobre a maioria destes itens (incluindo desabilitar `X-Powered-By`) com configuração mínima.
-2. Configurar uma `Content-Security-Policy` adequada ao uso de scripts inline/estilos existentes na aplicação (o `helmet` permite customização por diretiva).
-3. Revisar se `frame-ancestors`/`X-Frame-Options` deve ser `DENY` (nenhum caso de uso legítimo de iframe identificado na aplicação).
+1. Add [`helmet`](https://www.npmjs.com/package/helmet) as a dependency and register it early in the middleware chain in `app.js` — covers most of these items (including disabling `X-Powered-By`) with minimal configuration.
+2. Configure a `Content-Security-Policy` appropriate for the inline scripts/styles already present in the application (`helmet` allows per-directive customization).
+3. Review whether `frame-ancestors`/`X-Frame-Options` should be `DENY` (no legitimate iframe use case identified in the application).

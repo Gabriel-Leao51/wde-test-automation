@@ -1,54 +1,54 @@
-# BUG-SEC-004: Cookie de Sessão sem Flags `Secure`/`SameSite`
+# BUG-SEC-004: Session Cookie Missing `Secure`/`SameSite` Flags
 
-## Severidade
+## Severity
 
-**MÉDIA**
+**MEDIUM**
 
-- **Justificativa:** O cookie de sessão (`connect.sid`) já possui `HttpOnly` (protege contra roubo via XSS), mas não define explicitamente `Secure` nem `SameSite`. Sem `Secure`, o cookie pode ser transmitido em texto claro caso a aplicação seja um dia servida também por HTTP além de HTTPS. Sem `SameSite` explícito, a aplicação depende do comportamento padrão do navegador do cliente em vez de impor a política, o que é inconsistente entre navegadores/versões.
+- **Justification:** The session cookie (`connect.sid`) already has `HttpOnly` (protects against theft via XSS), but doesn't explicitly set `Secure` or `SameSite`. Without `Secure`, the cookie could be transmitted in plain text if the application is ever also served over plain HTTP alongside HTTPS. Without an explicit `SameSite`, the application relies on the client browser's default behavior instead of enforcing the policy itself, which is inconsistent across browsers/versions.
 
-## Prioridade
+## Priority
 
-**MÉDIA**
+**MEDIUM**
 
-## Ambiente
+## Environment
 
-- **Aplicação:** WDE Shop
-- **URL Base:** `http://localhost:3000`
-- **Endpoint Afetado:** qualquer resposta que defina o cookie de sessão (ex: `GET /login`)
+- **Application:** WDE Shop
+- **Base URL:** `http://localhost:3000`
+- **Affected Endpoint:** any response that sets the session cookie (e.g. `GET /login`)
 
-## Detalhes do Relato
+## Report Details
 
-- **Relatado por:** Gabriel Leão (com assistência de Claude)
-- **Data da Descoberta:** 24/07/2026
+- **Reported by:** Gabriel Leão (with assistance from Claude)
+- **Date discovered:** 2026-07-24
 
-## Passos para Reproduzir
+## Steps to Reproduce
 
 ```bash
 curl -I http://localhost:3000/login
 ```
 
-## Resultado Esperado
+## Expected Result
 
-O header `Set-Cookie` deve incluir as flags `Secure` e `SameSite=Strict` (ou `Lax`, dependendo da necessidade de navegação cross-site) além de `HttpOnly`.
+The `Set-Cookie` header should include the `Secure` and `SameSite=Strict` (or `Lax`, depending on cross-site navigation needs) flags in addition to `HttpOnly`.
 
-## Resultado Atual (Falha)
+## Actual Result (Failure)
 
-Resposta real capturada:
+Real captured response:
 
 ```
 Set-Cookie: connect.sid=s%3A...; Path=/; Expires=...; HttpOnly
 ```
 
-Apenas `HttpOnly` está presente. `Secure` e `SameSite` estão ausentes.
+Only `HttpOnly` is present. `Secure` and `SameSite` are absent.
 
-## Evidências
+## Evidence
 
-- **Teste Automatizado:** `features/security/hardening.feature`, cenário "O cookie de sessão deve ter as flags Secure e SameSite configuradas" (`@xfail`, tag `@session`).
-- **Reprodução manual:** comando `curl -I` acima.
+- **Automated Test:** `features/security/hardening.feature`, scenario "The session cookie should have the Secure and SameSite flags configured" (`@xfail`, tag `@session`).
+- **Manual reproduction:** the `curl -I` command above.
 
-## Análise de Causa Raiz
+## Root Cause Analysis
 
-`config/session.js` configura o cookie apenas com `maxAge`:
+`config/session.js` only configures the cookie's `maxAge`:
 
 ```js
 cookie: {
@@ -56,14 +56,14 @@ cookie: {
 },
 ```
 
-Nenhuma opção `secure` ou `sameSite` é passada ao `express-session`.
+No `secure` or `sameSite` option is passed to `express-session`.
 
-## Impacto Potencial
+## Potential Impact
 
-- Sem `Secure`, o cookie de sessão pode trafegar sem criptografia se a aplicação for exposta também via HTTP em algum ambiente.
-- Sem `SameSite` explícito, a proteção contra CSRF que o navegador ofereceria nativamente para requisições cross-site fica sujeita ao comportamento padrão (varia por navegador/versão) em vez de ser garantida pela aplicação.
+- Without `Secure`, the session cookie can travel unencrypted if the application is ever also exposed over HTTP in some environment.
+- Without an explicit `SameSite`, the CSRF protection the browser would natively provide for cross-site requests is left to default behavior (varies by browser/version) instead of being guaranteed by the application.
 
-## Recomendações
+## Recommendations
 
-1. Em `config/session.js`, definir explicitamente `cookie: { maxAge: ..., secure: true, sameSite: 'lax' }` (ou `'strict'`, avaliando se algum fluxo legítimo depende de navegação cross-site — ex: retorno do Stripe Checkout).
-2. Como o app roda atrás de HTTPS apenas em produção, considerar tornar `secure` condicional ao ambiente (`process.env.NODE_ENV === 'production'`) para não quebrar o desenvolvimento local via HTTP — mas isso deve vir acompanhado da correção de `BUG-INFO-001` (definir `NODE_ENV` corretamente).
+1. In `config/session.js`, explicitly set `cookie: { maxAge: ..., secure: true, sameSite: 'lax' }` (or `'strict'`, evaluating whether any legitimate flow depends on cross-site navigation — e.g. the return from Stripe Checkout).
+2. Since the app only runs behind HTTPS in production, consider making `secure` conditional on the environment (`process.env.NODE_ENV === 'production'`) so local HTTP development doesn't break — but this should come together with the `BUG-INFO-001` fix (setting `NODE_ENV` correctly).

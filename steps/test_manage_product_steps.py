@@ -8,23 +8,23 @@ from utils.helpers import format_product_data
 scenarios("admin/manage_product.feature")
 
 
-# --- Contexto ---
+# --- Background ---
 
 
-@given(parsers.parse('eu estou na pagina inicial do painel administrativo "{expected_path}"'))
+@given(parsers.parse('I am on the admin panel home page "{expected_path}"'))
 def assert_on_admin_home_page(page, expected_path):
     expect(page).to_have_url(re.compile(re.escape(expected_path)))
 
 
-@when(parsers.parse('eu navego para a pagina de gerenciamento de produtos "{link_text}"'))
+@when(parsers.parse('I navigate to the manage products page "{link_text}"'))
 def navigate_to_manage_products(products_page, link_text):
     products_page.click_manage_products_link()
 
 
-# --- Steps genéricos reutilizados entre cenários ---
+# --- Generic steps reused across scenarios ---
 
 
-@when(parsers.parse('eu clico no botao "{button_text}"'))
+@when(parsers.parse('I click the "{button_text}" button'))
 def click_generic_button(page, products_page, button_text):
     if button_text == "Add Product":
         products_page.click_add_new_product_button()
@@ -36,61 +36,61 @@ def click_generic_button(page, products_page, button_text):
         locator.click()
 
 
-@when(parsers.parse('eu clico no botao "{button_text}" para o produto de titulo "{product_title}"'))
+@when(parsers.parse('I click the "{button_text}" button for the product titled "{product_title}"'))
 def click_button_for_product(products_page, scenario_context, button_text, product_title):
     if button_text == "View & Edit":
         products_page.click_edit_product_button(product_title)
     elif button_text == "Delete":
         scenario_context["deleted_product_id"] = products_page.click_delete_product_button(product_title)
     else:
-        raise ValueError(f'Ação para o botão "{button_text}" não implementada para produtos.')
+        raise ValueError(f'Action for the "{button_text}" button is not implemented for products.')
 
 
-@then(parsers.parse('eu devo ser redirecionado para a pagina de gerenciamento de produtos "{expected_path}"'))
+@then(parsers.parse('I should be redirected to the manage products page "{expected_path}"'))
 def assert_redirected_to_manage_products(page, expected_path):
     expect(page).to_have_url(re.compile(re.escape(expected_path)))
 
 
-# --- Steps: Adicionar Produto ---
+# --- Steps: Add Product ---
 
 
-@when("eu preencho o formulario de adicionar produto com os seguintes dados:")
+@when("I fill in the add product form with the following data:")
 def fill_add_product_form(products_page, datatable):
     product_data = format_product_data(datatable)
     products_page.fill_product_form(product_data)
 
 
-@then(parsers.parse('o produto "{product_title}" deve estar visivel na listagem de produtos com titulo e imagem'))
+@then(parsers.parse('the product "{product_title}" should be visible in the product list with title and image'))
 def assert_product_added(products_page, product_title):
     products_page.assert_product_added_successfully(product_title)
 
 
-# --- Steps: Editar Produto ---
+# --- Steps: Edit Product ---
 
 
-@when("eu preencho o formulario de edição de produto com os seguintes dados:")
+@when("I fill in the edit product form with the following data:")
 def fill_edit_product_form(products_page, datatable):
     product_data = format_product_data(datatable)
     products_page.fill_edit_product_form(product_data)
 
 
-@then(parsers.parse('o produto "{product_title}" deve ser exibido na listagem de produtos com o titulo atualizado'))
+@then(parsers.parse('the product "{product_title}" should be displayed in the product list with the updated title'))
 def assert_product_edited(products_page, product_title):
     products_page.assert_product_edited_successfully(product_title)
 
 
-# --- Steps: Excluir Produto ---
+# --- Steps: Delete Product ---
 
 
-@then(parsers.parse('o produto "{product_title}" não deve ser mais exibido na listagem de produtos'))
+@then(parsers.parse('the product "{product_title}" should no longer be displayed in the product list'))
 def assert_product_deleted(products_page, scenario_context, product_title):
     products_page.assert_product_deleted_successfully(scenario_context["deleted_product_id"])
 
 
-# --- Steps: Validação (Campo Obrigatório) ---
+# --- Steps: Validation (Required Field) ---
 
 
-@then("eu devo ver uma mensagem de erro informando que os campos obrigatorios devem ser preenchidos")
+@then("I should see an error message stating that required fields must be filled in")
 def assert_required_field_error(products_page):
     validity = products_page.product_title_input.evaluate(
         "el => ({ valueMissing: el.validity.valueMissing, message: el.validationMessage })"
@@ -103,6 +103,6 @@ def assert_required_field_error(products_page):
     assert validity["message"] != ""
 
 
-@then("eu devo permanecer na pagina de adicionar produto")
+@then("I should remain on the add product page")
 def assert_still_on_new_product_page(page):
     expect(page).to_have_url(re.compile(r".*/admin/products/new"))

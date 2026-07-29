@@ -1,54 +1,54 @@
-# language: pt
-Funcionalidade: Segurança Avançada - Hardening da Aplicação
+# language: en
+Feature: Advanced Security - Application Hardening
 
-  Como uma aplicação que processa dados de usuários e pagamentos
-  Devo me proteger contra técnicas comuns de ataque e evitar vazar detalhes internos
-  Para garantir a integridade, disponibilidade e confidencialidade do sistema
-
-  @security @injection @happy-path
-  Cenario: Tentativa de NoSQL injection no login não derruba a aplicação nem contorna a autenticação
-    Quando eu envio um payload de NoSQL injection para "/login"
-    Entao eu devo receber uma resposta de credenciais invalidas
-    E a aplicacao deve permanecer no ar
+  As an application that processes user and payment data
+  I must protect against common attack techniques and avoid leaking internal details
+  To ensure the system's integrity, availability, and confidentiality
 
   @security @injection @happy-path
-  Cenario: Tentativa de NoSQL injection no cadastro não derruba a aplicação
-    Quando eu envio um payload de NoSQL injection para "/signup"
-    Entao a aplicacao deve permanecer no ar
+  Scenario: NoSQL injection attempt on login does not crash the app or bypass authentication
+    When I send a NoSQL injection payload to "/login"
+    Then I should receive an invalid credentials response
+    And the application should remain up
 
-  # BUG CONHECIDO (BUG-SEC-002): headers de segurança ausentes
+  @security @injection @happy-path
+  Scenario: NoSQL injection attempt on signup does not crash the app
+    When I send a NoSQL injection payload to "/signup"
+    Then the application should remain up
+
+  # KNOWN BUG (BUG-SEC-002): missing security headers
   @security @headers @xfail
-  Cenario: A aplicação deve responder com headers de segurança padrão
-    Quando eu faco uma requisicao GET para "/products"
-    Entao a resposta deve conter o header "x-content-type-options" com valor "nosniff"
-    E a resposta deve conter o header "x-frame-options"
-    E a resposta deve conter o header "content-security-policy"
-    E a resposta nao deve conter o header "x-powered-by"
+  Scenario: The application should respond with standard security headers
+    When I make a GET request to "/products"
+    Then the response should contain the header "x-content-type-options" with value "nosniff"
+    And the response should contain the header "x-frame-options"
+    And the response should contain the header "content-security-policy"
+    And the response should not contain the header "x-powered-by"
 
-  # BUG CONHECIDO (BUG-SEC-003): token CSRF exposto na URL do formulário
+  # KNOWN BUG (BUG-SEC-003): CSRF token exposed in the form URL
   @security @csrf @xfail
-  Cenario: O token CSRF não deve ser exposto na URL do formulário de produto
-    Dado que eu estou logado como "admin"
-    Quando eu visito a pagina de novo produto
-    Entao o atributo action do formulario nao deve conter "_csrf"
+  Scenario: The CSRF token should not be exposed in the product form URL
+    Given I am logged in as "admin"
+    When I visit the new product page
+    Then the form's action attribute should not contain "_csrf"
 
-  # BUG CONHECIDO (BUG-SEC-004): cookie de sessão sem flags Secure/SameSite
+  # KNOWN BUG (BUG-SEC-004): session cookie missing Secure/SameSite flags
   @security @session @xfail
-  Cenario: O cookie de sessão deve ter as flags Secure e SameSite configuradas
-    Quando eu faco uma requisicao GET para "/login"
-    Entao o cookie de sessao deve ter a flag Secure habilitada
-    E o cookie de sessao deve ter a flag SameSite configurada
+  Scenario: The session cookie should have the Secure and SameSite flags configured
+    When I make a GET request to "/login"
+    Then the session cookie should have the Secure flag enabled
+    And the session cookie should have the SameSite flag configured
 
-  # BUG CONHECIDO (BUG-INFO-001): mensagens de erro expõem detalhes internos do servidor
+  # KNOWN BUG (BUG-INFO-001): error messages expose internal server details
   @security @error-handling @xfail
-  Cenario: Erros internos não devem expor caminhos e código-fonte do servidor
-    Quando eu envio uma requisicao que causa um erro interno no servidor
-    Entao a resposta nao deve conter caminhos do sistema de arquivos do servidor
-    E a resposta nao deve conter trechos de codigo-fonte do servidor
+  Scenario: Internal errors should not expose server file paths and source code
+    When I send a request that triggers an internal server error
+    Then the response should not contain server filesystem paths
+    And the response should not contain server source code snippets
 
-  # BUG CONHECIDO (BUG-SEC-005): segredo de sessão hardcoded permite forjar cookies válidos
+  # KNOWN BUG (BUG-SEC-005): hardcoded session secret allows forging valid cookies
   @security @session @xfail
-  Cenario: Um cookie de sessão forjado com o segredo hardcoded não deve conceder acesso
-    Quando eu forjo um cookie de sessao de administrador usando o segredo hardcoded do codigo-fonte
-    E eu acesso "/admin/products" usando apenas o cookie forjado
-    Entao o acesso NAO deve ser concedido sem um login de verdade
+  Scenario: A session cookie forged with the hardcoded secret should not grant access
+    When I forge an admin session cookie using the hardcoded secret from the source code
+    And I access "/admin/products" using only the forged cookie
+    Then access should NOT be granted without a real login

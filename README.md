@@ -1,89 +1,89 @@
-# Automação de Testes (Portfólio QA) - WDE Shop
+# Test Automation (QA Portfolio) - WDE Shop
 
-![Status CI](https://github.com/Gabriel-Leao51/wde-test-automation/actions/workflows/playwright-tests.yml/badge.svg)
+![CI Status](https://github.com/Gabriel-Leao51/wde-test-automation/actions/workflows/playwright-tests.yml/badge.svg)
 
-## 1. Introdução
+## 1. Introduction
 
-Este repositório contém um projeto de automação de testes E2E (End-to-End) desenvolvido como parte de um portfólio de Quality Assurance (QA). O objetivo principal foi construir uma suíte de testes robusta utilizando tecnologias modernas e boas práticas de mercado, demonstrando habilidades em automação, BDD, CI/CD e identificação de bugs.
+This repository contains an E2E (End-to-End) test automation project built as part of a Quality Assurance (QA) portfolio. The main goal was to build a robust test suite using modern technologies and industry best practices, demonstrating skills in automation, BDD, CI/CD, and bug discovery.
 
-A aplicação alvo (AUT - Application Under Test) é a **WDE Shop** ([repositório](https://github.com/Gabriel-Leao51/wde)), rodando localmente via Docker Compose (app + MongoDB), substituindo o deploy anteriormente hospedado no Render.
+The application under test (AUT) is **WDE Shop** ([repository](https://github.com/Gabriel-Leao51/wde)), running locally via Docker Compose (app + MongoDB), replacing the previously Render-hosted deployment.
 
-> Este projeto começou como uma suíte em **Cypress + Cucumber (JavaScript)** e foi migrado para **Playwright + pytest-bdd (Python)**. A suíte original em Cypress permanece preservada e consultável na branch [`legacy-cypress`](https://github.com/Gabriel-Leao51/wde-test-automation/tree/legacy-cypress). Detalhes da migração (decisões, fases, mapeamento Cypress → Playwright) estão em [ROADMAP.md](ROADMAP.md).
+> This project started as a **Cypress + Cucumber (JavaScript)** suite and was migrated to **Playwright + pytest-bdd (Python)**. The original Cypress suite remains preserved and browsable on the [`legacy-cypress`](https://github.com/Gabriel-Leao51/wde-test-automation/tree/legacy-cypress) branch. Migration details (decisions, phases, Cypress → Playwright mapping) are in [ROADMAP.md](ROADMAP.md).
 
-## 2. Escopo da Automação
+## 2. Automation Scope
 
-O projeto abrange diferentes áreas e tipos de testes:
+The project covers different testing areas and types:
 
-- **Testes Funcionais (Painel Administrativo):**
-  - **Login:** Autenticação no painel administrativo.
-  - **Gerenciamento de Produtos:** CRUD completo (Adicionar, Editar, Excluir) - Caminho Feliz.
-  - **Gerenciamento de Produtos:** Validação de campo obrigatório (Nome/Título) - Caminho Infeliz.
-  - **Gerenciamento de Pedidos:** Alteração do status de um pedido existente.
-- **Testes de Segurança (Painel Administrativo):**
-  - **Autenticação:** Tentativas de acesso a áreas administrativas por usuários não logados.
-  - **Autorização:** Tentativas de acesso a áreas administrativas por usuários logados com perfil de "cliente" (não autorizado).
-- **Teste E2E (Fluxo do Cliente):**
-  - **Jornada de Compra:** Login do cliente, busca de produto, adição ao carrinho, checkout, preenchimento do cartão de teste na página do Stripe e confirmação até a página de sucesso do pedido.
-- **Regressão Visual:**
-  - Comparação de screenshot vs. baseline aprovada em 5 páginas-chave: login, catálogo de produtos, detalhes de produto, painel administrativo de produtos e página de erro 401.
+- **Functional Tests (Admin Panel):**
+  - **Login:** Admin panel authentication.
+  - **Product Management:** Full CRUD (Add, Edit, Delete) - Happy Path.
+  - **Product Management:** Required field validation (Name/Title) - Unhappy Path.
+  - **Order Management:** Changing an existing order's status.
+- **Security Tests (Admin Panel):**
+  - **Authentication:** Attempts to access admin areas by unauthenticated users.
+  - **Authorization:** Attempts to access admin areas by logged-in users with a "customer" profile (unauthorized).
+- **E2E Test (Customer Flow):**
+  - **Purchase Journey:** Customer login, product search, adding to cart, checkout, filling in the test card on Stripe's page, and confirmation through to the order success page.
+- **Visual Regression:**
+  - Screenshot vs. approved baseline comparison across 5 key pages: login, product catalog, product details, admin product panel, and the 401 error page.
 
-## 3. Tecnologias e Metodologias Utilizadas
+## 3. Technologies and Methodologies Used
 
-- **Framework de Automação:** [Playwright](https://playwright.dev/python/) (Python, API síncrona)
-- **Linguagem:** Python 3.12
-- **Abordagem BDD:** Gherkin (PT-BR) via [pytest-bdd](https://pytest-bdd.readthedocs.io/)
-- **Padrão de Projeto:** Page Object Model (POM)
-- **Gerenciador de Pacotes:** [uv](https://docs.astral.sh/uv/)
+- **Automation Framework:** [Playwright](https://playwright.dev/python/) (Python, sync API)
+- **Language:** Python 3.12
+- **BDD Approach:** Gherkin (English) via [pytest-bdd](https://pytest-bdd.readthedocs.io/)
+- **Design Pattern:** Page Object Model (POM)
+- **Package Manager:** [uv](https://docs.astral.sh/uv/)
 - **CI/CD:** GitHub Actions
-- **Relatórios:** `pytest-html` (relatório HTML autocontido), trace/vídeo/screenshot do Playwright retidos em falhas
-- **Regressão Visual:** [`pytest-playwright-visual-snapshot`](https://pypi.org/project/pytest-playwright-visual-snapshot/) (equivalente Python ao `to_have_screenshot()`, que só existe no test runner JS/TS)
-- **Gerenciamento de Dados:** Fixtures JSON (`test_data/`) para usuários e pedidos, imagem de teste para upload
-- **Aplicação alvo local:** Docker Compose ([repositório `wde`](https://github.com/Gabriel-Leao51/wde)) — app + MongoDB, com seed automático de dados
-- **Controle de Versão:** Git / GitHub
+- **Reporting:** `pytest-html` (self-contained HTML report), Playwright trace/video/screenshot retained on failure
+- **Visual Regression:** [`pytest-playwright-visual-snapshot`](https://pypi.org/project/pytest-playwright-visual-snapshot/) (the Python equivalent of `to_have_screenshot()`, which only exists in the JS/TS test runner)
+- **Data Management:** JSON fixtures (`test_data/`) for users and orders, test image for upload
+- **Local target application:** Docker Compose ([`wde` repository](https://github.com/Gabriel-Leao51/wde)) — app + MongoDB, with automatic data seeding
+- **Version Control:** Git / GitHub
 
-## 4. Estrutura do Projeto
+## 4. Project Structure
 
 ```
 .
-├── pyproject.toml              # Dependências e configuração do pytest (uv)
+├── pyproject.toml              # Dependencies and pytest configuration (uv)
 ├── uv.lock
-├── conftest.py                 # base_url, fixtures de Page Objects e login
+├── conftest.py                 # base_url, Page Object fixtures, and login
 ├── features/
-│   ├── admin/                  # Features de login, autenticação, autorização, produtos, pedidos
-│   ├── client/                 # Feature do fluxo de compra
-│   ├── security/                # Features de segurança avançada (hardening)
-│   └── visual/                  # Feature de regressão visual
-├── steps/                      # Step definitions (pytest-bdd) + conftest.py com steps compartilhados
+│   ├── admin/                  # Login, authentication, authorization, products, orders features
+│   ├── client/                 # Purchase flow feature
+│   ├── security/                # Advanced security features (hardening)
+│   └── visual/                  # Visual regression feature
+├── steps/                      # Step definitions (pytest-bdd) + conftest.py with shared steps
 ├── pages/                      # Page Objects (LoginPage, ProductsPage, CartPage, OrdersPage, StripeCheckoutPage)
-├── __snapshots__/              # Baselines de regressão visual (geradas em Linux — ver seção 7.9)
-├── test_data/                  # Fixtures de dados (users.json, orders.json, mousepad.jpg)
-├── utils/                      # Funções auxiliares (helpers.py)
-├── docs/bugs/                  # Relatórios dos bugs encontrados
-├── evidence/                   # Screenshots e vídeos comprovando o comportamento inesperado
+├── __snapshots__/              # Visual regression baselines (generated on Linux — see section 7.9)
+├── test_data/                  # Data fixtures (users.json, orders.json, mousepad.jpg)
+├── utils/                      # Helper functions (helpers.py)
+├── docs/bugs/                  # Reports for bugs found
+├── evidence/                   # Screenshots and videos proving the unexpected behavior
 ├── .github/workflows/
 │   └── playwright-tests.yml
-└── ROADMAP.md                  # Roadmap e histórico da migração Cypress → Playwright
+└── ROADMAP.md                  # Roadmap and history of the Cypress → Playwright migration
 ```
 
-## 5. Pré-requisitos
+## 5. Prerequisites
 
 - [Python](https://www.python.org/) 3.12+
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para rodar a aplicação alvo localmente)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (to run the target application locally)
 - [Git](https://git-scm.com/)
 
-## 6. Instalação
+## 6. Installation
 
-1. Clone os dois repositórios (a aplicação alvo e a suíte de testes):
+1. Clone both repositories (the target application and the test suite):
 
    ```bash
    git clone https://github.com/Gabriel-Leao51/wde.git
    git clone https://github.com/Gabriel-Leao51/wde-test-automation.git
    ```
 
-2. Suba a aplicação WDE Shop localmente (veja o [README do repositório `wde`](https://github.com/Gabriel-Leao51/wde#-rodando-localmente-com-docker) para detalhes — resumindo: `cp .env.example .env`, preencher `STRIPE_KEY`, e `docker compose up --build`). A aplicação sobe em `http://localhost:3000`, já com dados de teste populados pelo seed.
+2. Bring up the WDE Shop application locally (see the [`wde` repository README](https://github.com/Gabriel-Leao51/wde#-rodando-localmente-com-docker) for details — in short: `cp .env.example .env`, fill in `STRIPE_KEY`, and `docker compose up --build`). The application comes up at `http://localhost:3000`, already populated with test data by the seed script.
 
-3. Instale as dependências da suíte de testes:
+3. Install the test suite's dependencies:
 
    ```bash
    cd wde-test-automation
@@ -91,76 +91,76 @@ O projeto abrange diferentes áreas e tipos de testes:
    uv run playwright install --with-deps chromium
    ```
 
-## 7. Execução dos Testes
+## 7. Running Tests
 
-### 7.1. Suíte completa
+### 7.1. Full suite
 
 ```bash
 uv run pytest
 ```
 
-Por padrão roda em Chromium. Para rodar em outro navegador:
+Runs on Chromium by default. To run on another browser:
 
 ```bash
 uv run pytest --browser=firefox
 uv run pytest --browser=webkit
 ```
 
-### 7.2. Modo headed (com navegador visível)
+### 7.2. Headed mode (with a visible browser)
 
 ```bash
 uv run pytest --headed
 ```
 
-Adicione `--slowmo=400` (valor em ms) para desacelerar as ações e facilitar a observação visual.
+Add `--slowmo=400` (value in ms) to slow down actions and make visual observation easier.
 
-### 7.3. Um arquivo específico
+### 7.3. A specific file
 
 ```bash
 uv run pytest steps/test_manage_product_steps.py
 ```
 
-### 7.4. Execução paralela
+### 7.4. Parallel execution
 
 ```bash
 uv run pytest -n 4
 ```
 
-Usa [`pytest-xdist`](https://pytest-xdist.readthedocs.io/). Os 3 primeiros cenários de `manage_product.feature` (adicionar, editar, excluir) são interdependentes — operam sobre o mesmo produto em sequência — então carregam a tag `@xdist_group_product_crud`, que os fixa no mesmo worker (via `--dist=loadgroup`, já configurado em `pyproject.toml`, e o hook `pytest_bdd_apply_tag` em `conftest.py`). O 4º cenário (validação de campo obrigatório) é independente e não precisa da tag. O resto da suíte paraleliza livremente entre os demais workers.
+Uses [`pytest-xdist`](https://pytest-xdist.readthedocs.io/). The first 3 scenarios of `manage_product.feature` (add, edit, delete) are interdependent — they operate on the same product in sequence — so they carry the `@xdist_group_product_crud` tag, which pins them to the same worker (via `--dist=loadgroup`, already configured in `pyproject.toml`, and the `pytest_bdd_apply_tag` hook in `conftest.py`). The 4th scenario (required field validation) is independent and doesn't need the tag. The rest of the suite parallelizes freely across the remaining workers.
 
-`-n 4` é um teto deliberado, não `-n auto`: a WDE Shop roda como um único processo Node/Express + uma única instância MongoDB, sem escalonamento. Em testes locais, `-n auto` (usando todos os cores da máquina) gerou falhas intermitentes por timeout sob carga — o app simplesmente não responde rápido o suficiente com muitas sessões simultâneas. `-n 4` rodou de forma consistente em múltiplas execuções.
+`-n 4` is a deliberate ceiling, not `-n auto`: WDE Shop runs as a single Node/Express process + a single MongoDB instance, with no scaling. In local testing, `-n auto` (using all machine cores) produced intermittent timeout failures under load — the app simply doesn't respond fast enough with many concurrent sessions. `-n 4` ran consistently across multiple runs.
 
-### 7.6. Apontando para outro ambiente
+### 7.6. Pointing at a different environment
 
-Por padrão a suíte aponta para `http://localhost:3000`. Para rodar contra outra URL:
-
-```bash
-WDE_BASE_URL=http://outro-host:3000 uv run pytest
-```
-
-### 7.7. Relatórios e artefatos de falha
-
-Cada execução gera um relatório HTML autocontido em `playwright-report/report.html`. Falhas retêm automaticamente trace, vídeo e screenshot em `test-results/`, recuperáveis para depuração local:
+By default the suite targets `http://localhost:3000`. To run against a different URL:
 
 ```bash
-uv run playwright show-trace test-results/<pasta-do-teste>/trace.zip
+WDE_BASE_URL=http://other-host:3000 uv run pytest
 ```
 
-### 7.8. Suíte de segurança avançada (`features/security/`)
+### 7.7. Reports and failure artifacts
 
-Além dos testes via UI/HTTP (Playwright), o cenário de prova de conceito do `BUG-SEC-005` conecta diretamente ao MongoDB para forjar uma sessão (ver relatório do bug para detalhes). Por isso, o `docker-compose.yml` do repositório `wde` publica a porta do MongoDB em `127.0.0.1:27017`. Se estiver rodando os testes fora do padrão local (`localhost:3000` + `localhost:27017`), aponte também a variável `MONGODB_URI`:
+Each run generates a self-contained HTML report at `playwright-report/report.html`. Failures automatically retain trace, video, and screenshot in `test-results/`, recoverable for local debugging:
 
 ```bash
-MONGODB_URI=mongodb://outro-host:27017 uv run pytest steps/test_security_hardening_steps.py
+uv run playwright show-trace test-results/<test-folder>/trace.zip
 ```
 
-### 7.9. Regressão visual (`features/visual/`)
+### 7.8. Advanced security suite (`features/security/`)
 
-As baselines em `__snapshots__/` foram geradas em **Linux** (a mesma base Ubuntu Noble do runner `ubuntu-latest` do CI), porque o `pytest-playwright-visual-snapshot` grava o nome do arquivo com um valor fixo (não embutimos `sys.platform`, de propósito — ver ROADMAP, Fase 9). Renderização de fonte/anti-aliasing difere entre Windows e Linux, então rodar esses testes localmente no Windows sempre acusaria diferença, mesmo sem nenhuma mudança real de layout. Por isso:
+Besides the UI/HTTP tests (Playwright), the `BUG-SEC-005` proof-of-concept scenario connects directly to MongoDB to forge a session (see the bug report for details). Because of this, the `wde` repository's `docker-compose.yml` publishes MongoDB's port at `127.0.0.1:27017`. If you're running tests outside the local default (`localhost:3000` + `localhost:27017`), also point the `MONGODB_URI` variable:
 
-- **Por padrão, ficam fora da suíte local:** `addopts` já inclui `-m "not visual"`, então `uv run pytest` (seção 7.1) não os executa.
-- **No CI**, rodam explicitamente via `-m visual`, só no Chromium (para não triplicar a manutenção de baseline pela matriz).
-- **Para rodar ou atualizar as baselines**, use a imagem oficial do Playwright (mesma base do CI), conectada à rede Docker da aplicação:
+```bash
+MONGODB_URI=mongodb://other-host:27017 uv run pytest steps/test_security_hardening_steps.py
+```
+
+### 7.9. Visual regression (`features/visual/`)
+
+The baselines in `__snapshots__/` were generated on **Linux** (the same Ubuntu Noble base as the CI's `ubuntu-latest` runner), because `pytest-playwright-visual-snapshot` writes the snapshot filename with a fixed value (we deliberately don't embed `sys.platform` — see ROADMAP, Phase 9). Font rendering/anti-aliasing differs between Windows and Linux, so running these tests locally on Windows would always report a difference, even with no real layout change. Because of this:
+
+- **They're excluded from the local suite by default:** `addopts` already includes `-m "not visual"`, so `uv run pytest` (section 7.1) doesn't run them.
+- **In CI**, they run explicitly via `-m visual`, Chromium only (to avoid tripling baseline maintenance across the matrix).
+- **To run or update the baselines**, use Playwright's official image (same base as CI), connected to the application's Docker network:
 
   ```bash
   docker run --rm --network wde_default \
@@ -170,102 +170,104 @@ As baselines em `__snapshots__/` foram geradas em **Linux** (a mesma base Ubuntu
     bash -c "pip install --quiet pymongo pytest pytest-bdd pytest-html pytest-playwright pytest-xdist pytest-playwright-visual-snapshot && python -m pytest -m visual --browser chromium --update-snapshots steps/test_visual_regression_steps.py"
   ```
 
-  Use `wde-app-1` (nome do container, não `app`) como host: o Chromium força HTTPS em qualquer host chamado literalmente `app` via HSTS preload do gTLD `.app`, o que quebra `http://app:3000`. Sem `--update-snapshots`, o mesmo comando compara contra a baseline existente.
+  Use `wde-app-1` (the container name, not `app`) as the host: Chromium forces HTTPS on any host literally named `app` via the `.app` gTLD's HSTS preload list, which breaks `http://app:3000`. Without `--update-snapshots`, the same command compares against the existing baseline.
 
-## 8. Integração Contínua (CI/CD) com GitHub Actions
+## 8. Continuous Integration (CI/CD) with GitHub Actions
 
-O workflow está configurado em `.github/workflows/playwright-tests.yml` e realiza as seguintes etapas:
+The workflow is configured in `.github/workflows/playwright-tests.yml` and performs the following steps:
 
-- **Gatilhos:** Executado em eventos de `push` e `pull_request` na branch `main`.
-- **Ambiente:** Ubuntu com Python 3.12 (via `uv`) e Docker.
-- **Aplicação alvo:** Faz checkout do repositório `wde` como um diretório irmão e sobe a stack via `docker compose up -d --build`, aguardando o health check antes de prosseguir.
-- **Matriz multi-browser:** roda o job completo 3 vezes em paralelo (Chromium, Firefox, WebKit), cada um com sua própria stack Docker isolada (evita interferência de concorrência entre browsers). `fail-fast: false` — a falha em um navegador não cancela os outros.
-- **Instalação:** `uv sync` + `playwright install --with-deps <browser-da-matriz>`.
-- **Execução dos Testes:** Roda o subconjunto principal (`login`, `authentication`, `authorization`, `manage_product`) em paralelo via `pytest-xdist` (ver seção 7.4) — `-n 4` para Chromium, `-n 2` para Firefox/WebKit (processos mais pesados, tiveram timeouts intermitentes em `-n 4` durante validação local). Assim como na versão original em Cypress, os testes de `manage_orders.feature` e `purchase_flow.feature` ficam de fora do pipeline padrão — ambos geram pedidos persistentes no banco a cada execução, o que não é desejável em um pipeline de CI.
-- **Regressão visual:** roda como um passo extra, só na perna Chromium da matriz (`-m visual`, ver seção 7.9), comparando contra as baselines Linux versionadas em `__snapshots__/`.
-- **Bugs conhecidos como `@xfail`:** Os 3 cenários de `authorization.feature` que documentam `BUG-AUTH-001`/`BUG-AUTH-002` são marcados com a tag `@xfail` (com `xfail_strict` habilitado). Isso permite que o pipeline reporte sucesso normalmente enquanto continua executando e rastreando esses cenários — se algum dos bugs for corrigido, o cenário correspondente passa a `XPASS` e quebra o build, sinalizando a regressão em vez de passar despercebida.
-- **Upload do Artefato:** Disponibiliza o relatório HTML e os artefatos de falha (`playwright-report/`, `test-results/`) como artefato do build no GitHub Actions.
+- **Triggers:** Runs on `push` and `pull_request` events to the `main` branch.
+- **Environment:** Ubuntu with Python 3.12 (via `uv`) and Docker.
+- **Target application:** Checks out the `wde` repository as a sibling directory and brings up the stack via `docker compose up -d --build`, waiting for the health check before proceeding.
+- **Multi-browser matrix:** runs the full job 3 times in parallel (Chromium, Firefox, WebKit), each with its own isolated Docker stack (avoids concurrency interference between browsers). `fail-fast: false` — a failure in one browser doesn't cancel the others.
+- **Installation:** `uv sync` + `playwright install --with-deps <matrix-browser>`.
+- **Running tests:** Runs the core subset (`login`, `authentication`, `authorization`, `manage_product`) in parallel via `pytest-xdist` (see section 7.4) — `-n 4` for Chromium, `-n 2` for Firefox/WebKit (heavier processes, had intermittent timeouts at `-n 4` during local validation). Just like in the original Cypress version, `manage_orders.feature` and `purchase_flow.feature` are left out of the standard pipeline — both create persistent orders in the database on every run, which is undesirable in a CI pipeline.
+- **Visual regression:** runs as an extra step, only on the Chromium leg of the matrix (`-m visual`, see section 7.9), comparing against the Linux baselines versioned in `__snapshots__/`.
+- **Known bugs as `@xfail`:** The 3 scenarios in `authorization.feature` documenting `BUG-AUTH-001`/`BUG-AUTH-002` are tagged `@xfail` (with `xfail_strict` enabled). This lets the pipeline report success normally while still running and tracking these scenarios — if either bug is fixed, the corresponding scenario turns into an `XPASS` and breaks the build, flagging the regression instead of it slipping by unnoticed.
+- **Artifact Upload:** Makes the HTML report and failure artifacts (`playwright-report/`, `test-results/`) available as a build artifact in GitHub Actions.
 
-(Link para o status do último build na badge no topo deste README.)
+(Link to the latest build status via the badge at the top of this README.)
 
-## 9. Descobertas e Bugs Identificados
+## 9. Findings and Identified Bugs
 
-Durante o desenvolvimento da automação, foram identificadas vulnerabilidades de segurança na aplicação WDE Shop. As que seguem presentes são reproduzidas pela suíte atual (marcadas `@xfail` para não quebrar o CI, mas ainda executadas a cada run em `features/security/hardening.feature` e `features/admin/authorization.feature`).
+During automation development, security vulnerabilities were identified in the WDE Shop application. The ones still present are reproduced by the current suite (marked `@xfail` so they don't break CI, but still run on every run in `features/security/hardening.feature` and `features/admin/authorization.feature`).
 
-### Corrigidos
+### Fixed
 
-**NoSQL Injection → Crash Total da Aplicação (não autenticado)**
+**NoSQL Injection → Full Application Crash (unauthenticated)**
 
-Descrição: `POST /login` (ou `/signup`) com corpo JSON `{"email":{"$ne":null},"password":{"$ne":null}}` fazia o MongoDB interpretar `$ne` como operador de consulta (contornando a busca por e-mail exato) e, em seguida, derrubava o processo Node inteiro ao passar um objeto (em vez de string) para `bcrypt.compare()` — uma exceção não tratada. Um único request não autenticado bastava para tirar a aplicação do ar para todos os usuários.
+Description: `POST /login` (or `/signup`) with a JSON body of `{"email":{"$ne":null},"password":{"$ne":null}}` made MongoDB interpret `$ne` as a query operator (bypassing the exact-email lookup) and then crashed the entire Node process by passing an object (instead of a string) to `bcrypt.compare()` — an unhandled exception. A single unauthenticated request was enough to take the application down for every user.
 
-Correção: validação de tipo (`email`/`password` devem ser strings) adicionada em `controllers/auth.controller.js` e `util/validation.js`, fechando tanto o vetor de injeção quanto o crash.
+Fix: type validation (`email`/`password` must be strings) added in `controllers/auth.controller.js` and `util/validation.js`, closing both the injection vector and the crash.
 
-Comprovação: `features/security/hardening.feature`, cenários de NoSQL injection em `/login` e `/signup` — hoje passam normalmente (não são mais `@xfail`), validando que a aplicação responde com "Invalid credentials" e permanece no ar.
+Proof: `features/security/hardening.feature`, NoSQL injection scenarios against `/login` and `/signup` — now pass normally (no longer `@xfail`), validating that the application responds with "Invalid credentials" and stays up.
 
-### Ainda presentes
+### Still present
 
-**BUG-AUTH-001: Falha de Autorização no Acesso a Páginas Administrativas**
+**BUG-AUTH-001: Authorization Failure on Access to Admin Pages**
 
-Descrição: Usuários autenticados com o perfil "cliente" conseguem acessar diretamente URLs de gerenciamento de produtos (`/admin/products`, `/admin/products/:id`), que deveriam ser restritas a administradores.
+Description: Users authenticated with the "customer" profile can directly access product management URLs (`/admin/products`, `/admin/products/:id`), which should be restricted to administrators.
 
-Comprovação: Os cenários automatizados em `authorization.feature` documentam o comportamento esperado (acesso negado) e falham intencionalmente contra o comportamento real, confirmando a vulnerabilidade.
+Proof: The automated scenarios in `authorization.feature` document the expected behavior (access denied) and intentionally fail against the actual behavior, confirming the vulnerability.
 
-Relatório Detalhado: [BUG-AUTH-001 Report](docs/bugs/BUG-AUTH-001.md)
+Detailed Report: [BUG-AUTH-001 Report](docs/bugs/BUG-AUTH-001.md)
 
-**BUG-AUTH-002: Falha de Autorização e Vazamento de Informação na Página de Pedidos**
+**BUG-AUTH-002: Authorization Failure and Information Leak on the Orders Page**
 
-Descrição: Usuários autenticados como "cliente" conseguem acessar a URL `/admin/orders`. Embora a página apareça parcialmente quebrada (sem controles de admin), ela exibe informações de pedidos, incluindo pedidos de outros usuários.
+Description: Users authenticated as "customer" can access the `/admin/orders` URL. Although the page appears partially broken (no admin controls), it displays order information, including other users' orders.
 
-Comprovação: O cenário automatizado para `/admin/orders` não resulta na mensagem de autorização esperada, e a verificação manual confirmou o acesso indevido a dados de outros usuários.
+Proof: The automated scenario for `/admin/orders` doesn't produce the expected authorization message, and manual verification confirmed improper access to other users' data.
 
-Relatório Detalhado: [BUG-AUTH-002 Report](docs/bugs/BUG-AUTH-002.md)
+Detailed Report: [BUG-AUTH-002 Report](docs/bugs/BUG-AUTH-002.md)
 
-**BUG-INFO-001: Exposição de Detalhes Internos do Servidor em Páginas de Erro**
+**BUG-INFO-001: Exposure of Internal Server Details on Error Pages**
 
-Descrição: `NODE_ENV` nunca é definido como `production`, então qualquer exceção não tratada expõe caminhos do servidor, trechos de código-fonte dos templates e stack traces do Node ao cliente. Agravado por uma falha em cascata: a própria página de erro (`500.ejs`) quebra ao tentar renderizar `locals.cart`, que não existe em erros disparados antes do `cartMiddleware` rodar (ex: rejeição de CSRF).
+Description: `NODE_ENV` is never set to `production`, so any unhandled exception exposes server paths, template source-code snippets, and Node stack traces to the client. Made worse by a cascading failure: the error page itself (`500.ejs`) breaks trying to render `locals.cart`, which doesn't exist for errors raised before `cartMiddleware` runs (e.g. CSRF rejection).
 
-Relatório Detalhado: [BUG-INFO-001 Report](docs/bugs/BUG-INFO-001.md)
+Detailed Report: [BUG-INFO-001 Report](docs/bugs/BUG-INFO-001.md)
 
-**BUG-SEC-002: Ausência de Headers HTTP de Segurança**
+**BUG-SEC-002: Missing HTTP Security Headers**
 
-Descrição: Nenhum header de segurança padrão (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, etc.) está presente nas respostas, e `X-Powered-By: Express` vaza a stack tecnológica. Nenhum middleware de segurança (`helmet` ou equivalente) está em uso.
+Description: No standard security header (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, etc.) is present in responses, and `X-Powered-By: Express` leaks the technology stack. No security middleware (`helmet` or equivalent) is in use.
 
-Relatório Detalhado: [BUG-SEC-002 Report](docs/bugs/BUG-SEC-002.md)
+Detailed Report: [BUG-SEC-002 Report](docs/bugs/BUG-SEC-002.md)
 
-**BUG-SEC-003: Token CSRF Exposto na URL do Formulário de Produto**
+**BUG-SEC-003: CSRF Token Exposed in the Product Form URL**
 
-Descrição: O formulário de produto envia o token CSRF como parâmetro de query string (`?_csrf=...`) na `action`, em vez de campo oculto — diferente de todos os outros formulários da aplicação, que fazem isso corretamente.
+Description: The product form sends the CSRF token as a query-string parameter (`?_csrf=...`) in the `action`, instead of a hidden field — unlike every other form in the application, which does this correctly.
 
-Relatório Detalhado: [BUG-SEC-003 Report](docs/bugs/BUG-SEC-003.md)
+Detailed Report: [BUG-SEC-003 Report](docs/bugs/BUG-SEC-003.md)
 
-**BUG-SEC-004: Cookie de Sessão sem Flags `Secure`/`SameSite`**
+**BUG-SEC-004: Session Cookie Missing `Secure`/`SameSite` Flags**
 
-Descrição: O cookie `connect.sid` define apenas `HttpOnly`; `Secure` e `SameSite` não são configurados explicitamente.
+Description: The `connect.sid` cookie only sets `HttpOnly`; `Secure` and `SameSite` aren't explicitly configured.
 
-Relatório Detalhado: [BUG-SEC-004 Report](docs/bugs/BUG-SEC-004.md)
+Detailed Report: [BUG-SEC-004 Report](docs/bugs/BUG-SEC-004.md)
 
-**BUG-SEC-005: Segredo de Sessão Hardcoded → Personificação Completa de Administrador (CRÍTICA)**
+**BUG-SEC-005: Hardcoded Session Secret → Full Admin Impersonation (CRITICAL)**
 
-Descrição: `config/session.js` usa a string literal `"super-secret"` como segredo de assinatura de sessão, em vez de uma variável de ambiente. Comprovado via prova de conceito funcional: um cookie de sessão forjado do zero (assinado com esse segredo, sem nunca chamar `/login`) é aceito pelo servidor e concede acesso administrativo completo.
+Description: `config/session.js` uses the literal string `"super-secret"` as the session-signing secret instead of an environment variable. Proven via a working proof of concept: a session cookie forged from scratch (signed with that secret, without ever calling `/login`) is accepted by the server and grants full admin access.
 
-Comprovação: `features/security/hardening.feature`, cenário "Um cookie de sessão forjado com o segredo hardcoded não deve conceder acesso" — insere uma sessão diretamente no MongoDB, assina o cookie com o mesmo algoritmo do `cookie-signature`, e confirma que `GET /admin/products` retorna o painel administrativo completo usando apenas esse cookie.
+Proof: `features/security/hardening.feature`, scenario "A session cookie forged with the hardcoded secret should not grant access" — inserts a session directly into MongoDB, signs the cookie with the same `cookie-signature` algorithm, and confirms `GET /admin/products` returns the full admin panel using only that cookie.
 
-Relatório Detalhado: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
+Detailed Report: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 
-## 10. Desafios e Decisões Chave
+## 10. Challenges and Key Decisions
 
-**Migração de Cypress/Cucumber (JS) para Playwright/pytest-bdd (Python):** decisão documentada em detalhe no [ROADMAP.md](ROADMAP.md), incluindo o mapeamento passo a passo de cada padrão Cypress para seu equivalente em Playwright.
+**Migration from Cypress/Cucumber (JS) to Playwright/pytest-bdd (Python):** decision documented in detail in [ROADMAP.md](ROADMAP.md), including a step-by-step mapping of each Cypress pattern to its Playwright equivalent.
 
-**Automação de Pagamento Externo (Stripe) — checkout completo:** a versão em Cypress precisava de `cy.origin()` para validar apenas o redirecionamento para `checkout.stripe.com`, sem conseguir interagir com a página em si (cross-origin/iframes eram instáveis). O Playwright não tem essa limitação — navegação cross-origin é nativa — e, na prática, os campos de cartão da página hospedada do Stripe renderizam diretamente no documento principal (não num iframe cross-origin), o que tornou a automação direta. O cenário `purchase_flow.feature` hoje completa o fluxo real: preenche o cartão de teste (`4242 4242 4242 4242`) usando uma chave de teste (`sk_test_...`) de verdade, confirma o pagamento e valida o redirecionamento até `/orders/success`. Testado e confiável nos 3 navegadores da matriz (Chromium, Firefox, WebKit) — o hCaptcha presente na página não bloqueou a automação em nenhum deles.
+**External Payment Automation (Stripe) — full checkout:** the Cypress version needed `cy.origin()` just to validate the redirect to `checkout.stripe.com`, without being able to interact with the page itself (cross-origin/iframes were unstable). Playwright doesn't have this limitation — cross-origin navigation is native — and, in practice, the hosted Stripe page's card fields render directly in the main document (not in a cross-origin iframe), which made direct automation possible. The `purchase_flow.feature` scenario now completes the real flow: fills in the test card (`4242 4242 4242 4242`) using a real test key (`sk_test_...`), confirms payment, and validates the redirect through to `/orders/success`. Tested and reliable across all 3 matrix browsers (Chromium, Firefox, WebKit) — the hCaptcha present on the page didn't block automation on any of them.
 
-**Bug de confiabilidade encontrado na aplicação (fora do escopo original de segurança):** ao validar o fluxo de compra localmente, uma falha na criação da sessão do Stripe (ex: chave inválida) derrubava o processo Node inteiro (`unhandled promise rejection` sem tratamento), tirando a aplicação do ar para todos os usuários. Corrigido diretamente no repositório `wde` (try/catch ao redor da chamada ao Stripe).
+**Reliability bug found in the application (outside the original security scope):** while validating the purchase flow locally, a failure creating the Stripe session (e.g. an invalid key) crashed the entire Node process (`unhandled promise rejection` with no handling), taking the application down for every user. Fixed directly in the `wde` repository (try/catch around the Stripe call).
 
-**CI/CD com bugs conhecidos:** rodar `authorization.feature` (que documenta bugs reais) no pipeline padrão deixava o build sempre vermelho, mesmo quando nada estava quebrado. A solução foi marcar os cenários como `@xfail` com `xfail_strict = true`, preservando a cobertura e a intenção original (falhar é o comportamento esperado) sem mascarar regressões de verdade.
+**CI/CD with known bugs:** running `authorization.feature` (which documents real bugs) in the standard pipeline left the build permanently red, even when nothing was actually broken. The fix was marking the scenarios `@xfail` with `xfail_strict = true`, preserving coverage and the original intent (failing is the expected behavior) without masking real regressions.
 
-**Estrutura de Código:** manteve-se a mesma filosofia da versão em Cypress — Page Objects unificados (`pages/`) e Step Definitions organizadas por feature (`steps/`), com steps compartilhados (como o login parametrizado por papel) centralizados em `steps/conftest.py`.
+**Code Structure:** kept the same philosophy as the Cypress version — unified Page Objects (`pages/`) and Step Definitions organized by feature (`steps/`), with shared steps (like role-parameterized login) centralized in `steps/conftest.py`.
 
-**Regressão visual — outro gap Python vs. JS/TS do Playwright:** assim como o "UI mode" (`--ui`), `expect(page).to_have_screenshot()` só existe no test runner JS/TS — confirmado por busca exaustiva na API Python instalada (`playwright/_impl/_assertions.py`, `playwright/sync_api/_generated.py`). O equivalente adotado foi o pacote de terceiros `pytest-playwright-visual-snapshot`. Como ele embute o nome da plataforma no arquivo de snapshot, gerar as baselines no Windows as tornaria inúteis para o CI (`ubuntu-latest`); a solução foi gerá-las dentro da própria imagem Docker oficial do Playwright, conectada à rede do `docker-compose.yml` da aplicação (ver seção 7.9). Isso também expôs um efeito colateral do Chromium: o nome de serviço `app` do Compose colide com a HSTS-preload do gTLD `.app`, forçando HTTPS e quebrando a conexão HTTP simples — contornado usando o nome do container (`wde-app-1`) em vez do nome do serviço.
+**Visual regression — another Python vs. JS/TS gap in Playwright:** just like "UI mode" (`--ui`), `expect(page).to_have_screenshot()` only exists in the JS/TS test runner — confirmed via an exhaustive search of the installed Python API (`playwright/_impl/_assertions.py`, `playwright/sync_api/_generated.py`). The equivalent adopted was the third-party package `pytest-playwright-visual-snapshot`. Since it embeds the platform name in the snapshot filename, generating baselines on Windows would make them useless for CI (`ubuntu-latest`); the fix was generating them inside Playwright's own official Docker image, connected to the application's `docker-compose.yml` network (see section 7.9). This also exposed a Chromium side effect: the Compose service name `app` collides with the `.app` gTLD's HSTS preload, forcing HTTPS and breaking the plain HTTP connection — worked around by using the container name (`wde-app-1`) instead of the service name.
 
-## 11. Próximos Passos (Sugestões)
+## 11. Next Steps (Suggestions)
 
-Veja a seção "Fase 9" do [ROADMAP.md](ROADMAP.md) para a lista completa de melhorias habilitadas pela migração para Playwright. Todos os itens já concluídos: matriz multi-browser (Chromium/Firefox/WebKit) no CI, execução paralela via `pytest-xdist`, checkout de teste do Stripe completo, cobertura leve de API via `playwright.request` (usada nos testes de segurança) e regressão visual (`features/visual/`, seção 7.9).
+See the "Phase 9" section of [ROADMAP.md](ROADMAP.md) for the full list of improvements enabled by the Playwright migration. All items are now complete: multi-browser matrix (Chromium/Firefox/WebKit) in CI, parallel execution via `pytest-xdist`, full Stripe test checkout, lightweight API coverage via `playwright.request` (used in the security tests), and visual regression (`features/visual/`, section 7.9).
+
+See [ROADMAP.md](ROADMAP.md)'s "Phase 10" for the current initiative: converting this suite to English (this document included), a real EN/PT-BR language selector in the app itself, a catalog overhaul (departments, filter, sort, search), a further set of checklist-driven UI features, and email/OTP integration.

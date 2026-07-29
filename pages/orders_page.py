@@ -10,7 +10,7 @@ class OrdersPage:
         self.orders_menu_link = self.header.get_by_role("link", name="Manage Orders")
         self.current_order: Locator | None = None
 
-    # --- Elementos (parametrizados) ---
+    # --- Elements (parameterized) ---
 
     def _order_container(self, order_id: str):
         hidden_input = self.page.locator(
@@ -30,7 +30,7 @@ class OrdersPage:
     def _status_badge(order_container: Locator):
         return order_container.locator("span.badge")
 
-    # --- Ações ---
+    # --- Actions ---
 
     def navigate_to_orders_page(self):
         expect(self.orders_menu_link).to_be_visible()
@@ -57,7 +57,7 @@ class OrdersPage:
             button.click()
         return self
 
-    # --- Asserções ---
+    # --- Assertions ---
 
     def assert_order_status_for_current_order(self, expected_status: str):
         badge = self._status_badge(self.current_order)

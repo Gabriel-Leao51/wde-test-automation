@@ -1,64 +1,64 @@
-# BUG-SEC-003: Token CSRF Exposto na URL (Query String)
+# BUG-SEC-003: CSRF Token Exposed in the URL (Query String)
 
-## Severidade
+## Severity
 
-**MÉDIA-BAIXA**
+**MEDIUM-LOW**
 
-- **Justificativa:** O token CSRF em si continua sendo validado corretamente pelo servidor (confirmado: requisições sem token ou com token inválido são rejeitadas — ver `BUG-INFO-001` para o problema *de resposta* a essa rejeição). O risco aqui é o **canal de exposição**: colocar o token na URL faz com que ele seja gravado em logs de acesso do servidor, no histórico do navegador, e potencialmente vazado a terceiros via header `Referer` quando a página carrega recursos externos.
+- **Justification:** The CSRF token itself is still correctly validated by the server (confirmed: requests without a token or with an invalid token are rejected — see `BUG-INFO-001` for the problem *in how it responds* to that rejection). The risk here is the **exposure channel**: putting the token in the URL means it gets written to server access logs, the browser's history, and can potentially leak to third parties via the `Referer` header when the page loads external resources.
 
-## Prioridade
+## Priority
 
-**MÉDIA**
+**MEDIUM**
 
-## Ambiente
+## Environment
 
-- **Aplicação:** WDE Shop
-- **URL Base:** `http://localhost:3000`
-- **Endpoint Afetado:** `/admin/products/new`, `/admin/products/:id` (formulário de produto) — o padrão de código responsável (`views/admin/products/includes/product-form.ejs`) é compartilhado por ambas as telas.
+- **Application:** WDE Shop
+- **Base URL:** `http://localhost:3000`
+- **Affected Endpoint:** `/admin/products/new`, `/admin/products/:id` (product form) — the responsible code pattern (`views/admin/products/includes/product-form.ejs`) is shared by both screens.
 
-## Detalhes do Relato
+## Report Details
 
-- **Relatado por:** Gabriel Leão (com assistência de Claude)
-- **Data da Descoberta:** 24/07/2026
+- **Reported by:** Gabriel Leão (with assistance from Claude)
+- **Date discovered:** 2026-07-24
 
-## Passos para Reproduzir
+## Steps to Reproduce
 
-1. Faça login como `admin`.
-2. Acesse `/admin/products/new`.
-3. Inspecione o atributo `action` do formulário de produto (ou observe a URL após um submit falho).
+1. Log in as `admin`.
+2. Go to `/admin/products/new`.
+3. Inspect the product form's `action` attribute (or observe the URL after a failed submit).
 
-## Resultado Esperado
+## Expected Result
 
-O token CSRF deve ser enviado apenas como campo oculto (`<input type="hidden" name="_csrf">`) dentro do corpo do formulário — nunca como parâmetro de URL.
+The CSRF token should only be sent as a hidden field (`<input type="hidden" name="_csrf">`) inside the form body — never as a URL parameter.
 
-## Resultado Atual (Falha)
+## Actual Result (Failure)
 
-`views/admin/products/includes/product-form.ejs` constrói a `action` do formulário assim:
+`views/admin/products/includes/product-form.ejs` builds the form's `action` like this:
 
 ```html
 <form action="<%= submitPath %>?_csrf=<%= locals.csrfToken %>" method="POST" enctype="multipart/form-data">
 ```
 
-O token aparece diretamente na URL de destino do formulário (ex: `/admin/products?_csrf=AbCdEf123...`).
+The token appears directly in the form's target URL (e.g. `/admin/products?_csrf=AbCdEf123...`).
 
-## Evidências
+## Evidence
 
-- **Teste Automatizado:** `features/security/hardening.feature`, cenário "O token CSRF não deve ser exposto na URL do formulário de produto" (`@xfail`, tag `@csrf`).
-- **Código-fonte:** `wde/views/admin/products/includes/product-form.ejs`.
+- **Automated Test:** `features/security/hardening.feature`, scenario "The CSRF token should not be exposed in the product form URL" (`@xfail`, tag `@csrf`).
+- **Source code:** `wde/views/admin/products/includes/product-form.ejs`.
 
-Nota: os demais formulários da aplicação (login, carrinho, logout, pedidos) usam corretamente `<input type="hidden" name="_csrf" ...>` — este padrão problemático está isolado ao formulário de produto.
+Note: every other form in the application (login, cart, logout, orders) correctly uses `<input type="hidden" name="_csrf" ...>` — this problematic pattern is isolated to the product form.
 
-## Análise de Causa Raiz
+## Root Cause Analysis
 
-O formulário de produto usa `enctype="multipart/form-data"` (necessário para upload de imagem). Aparentemente, o token foi colocado na URL como forma de garantir que ele fosse enviado independente da presença do arquivo — mas um campo oculto dentro do `<form multipart>` funciona normalmente e é o padrão usado em todos os outros formulários com upload/submit da aplicação.
+The product form uses `enctype="multipart/form-data"` (required for image upload). It seems the token was put in the URL as a way to guarantee it would be sent regardless of the file's presence — but a hidden field inside a `<form multipart>` works normally and is the pattern already used by every other form with upload/submit in the application.
 
-## Impacto Potencial
+## Potential Impact
 
-- O token CSRF passa a constar em logs de acesso do servidor (geralmente retidos por mais tempo que a sessão em si).
-- Fica registrado no histórico de navegação do navegador do administrador.
-- Pode vazar via header `Referer` para qualquer recurso de terceiros carregado a partir dessa página (fontes, scripts, imagens externas).
-- Reduz a eficácia da proteção CSRF caso o token vaze por qualquer um desses canais e ainda esteja válido na janela de sessão.
+- The CSRF token ends up in server access logs (usually retained longer than the session itself).
+- It's recorded in the admin's browser navigation history.
+- It can leak via the `Referer` header to any third-party resource loaded from that page (fonts, scripts, external images).
+- Reduces the effectiveness of CSRF protection if the token leaks through any of these channels while still valid within the session window.
 
-## Recomendações
+## Recommendations
 
-1. Alterar `product-form.ejs` para usar `action="<%= submitPath %>"` (sem query string) e adicionar `<input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">` dentro do formulário, no mesmo padrão já usado pelos demais formulários da aplicação.
+1. Change `product-form.ejs` to use `action="<%= submitPath %>"` (no query string) and add `<input type="hidden" name="_csrf" value="<%= locals.csrfToken %>">` inside the form, matching the pattern already used by every other form in the application.

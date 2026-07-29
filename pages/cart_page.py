@@ -6,12 +6,12 @@ class CartPage:
         self.page = page
         self.buy_products_button = page.get_by_role("button", name="Buy Products")
 
-    # --- Elementos (parametrizados) ---
+    # --- Elements (parameterized) ---
 
     def product_title_element(self, product_title: str):
         return self.page.get_by_role("heading", name=product_title, level=2)
 
-    # --- Ações ---
+    # --- Actions ---
 
     def verify_product_in_cart(self, product_title: str):
         expect(self.product_title_element(product_title)).to_be_visible()

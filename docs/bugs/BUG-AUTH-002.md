@@ -1,73 +1,73 @@
-# BUG-AUTH-002: Falha de Autorização - Cliente Acessa `/admin/orders` e Visualiza Pedidos Alheios
+# BUG-AUTH-002: Authorization Failure - Customer Accesses `/admin/orders` and Views Other Users' Orders
 
-## Severidade
+## Severity
 
-**Alta**
+**High**
 
-- **Justificativa:** Acesso indevido a uma área administrativa e a visualização confirmada de dados de pedidos pertencentes a outros usuários constituem uma violação de privacidade e segurança significativa, mesmo que PII direta não esteja visível nesta tela específica.
+- **Justification:** Improper access to an admin area and confirmed viewing of order data belonging to other users constitute a significant privacy and security violation, even though direct PII isn't visible on this specific screen.
 
-## Prioridade
+## Priority
 
-**Alta**
+**High**
 
-- **Justificativa:** Requer investigação e correção urgentes devido à exposição confirmada de dados e à quebra do controle de acesso.
+- **Justification:** Requires urgent investigation and fixing due to confirmed data exposure and the broken access control.
 
-## Ambiente
+## Environment
 
-- **Aplicação:** WDE Shop
-- **URL Base:** `https://wde-5p3f.onrender.com`
-- **Endpoint Afetado:** `/admin/orders`
-- **Perfil de Usuário:** `cliente`
-- **Navegador/Executor:** Conforme execução do Cypress (Ex: Chrome vXX, Electron vYY)
-- **Ambiente de Teste:** Local (Cypress Runner) / CI (GitHub Actions)
+- **Application:** WDE Shop
+- **Base URL:** `https://wde-5p3f.onrender.com`
+- **Affected Endpoint:** `/admin/orders`
+- **User Profile:** `customer`
+- **Browser/Runner:** As run via Cypress (e.g. Chrome vXX, Electron vYY)
+- **Test Environment:** Local (Cypress Runner) / CI (GitHub Actions)
 
-## Detalhes do Relato
+## Report Details
 
-- **Relatado por:** Gabriel Leão
-- **Data da Descoberta Original:** 31/03/2025
-- **Data da Confirmação do Vazamento:** 03/04/2025
+- **Reported by:** Gabriel Leão
+- **Original discovery date:** 2025-03-31
+- **Leak confirmation date:** 2025-04-03
 
-## Passos para Reproduzir
+## Steps to Reproduce
 
-1.  **Pré-condição:** Certifique-se de que existam pedidos previamente criados por _outros usuários_ na base de dados para observar o vazamento claramente. (A execução do teste E2E `purchase_flow.feature` pode criar um desses pedidos).
-2.  Faça login na aplicação WDE Shop (`https://wde-5p3f.onrender.com`) utilizando credenciais de um usuário com perfil `cliente`.
-3.  Após o login bem-sucedido, navegue diretamente para a URL `https://wde-5p3f.onrender.com/admin/orders` na barra de endereços do navegador.
-4.  **(Alternativa via Automação):** Execute o cenário correspondente em `cypress/integration/admin/features/authorization.feature` que tenta acessar `/admin/orders` como `cliente`.
+1.  **Precondition:** Make sure orders previously created by _other users_ exist in the database, to clearly observe the leak. (Running the `purchase_flow.feature` E2E test can create one of these orders.)
+2.  Log in to the WDE Shop application (`https://wde-5p3f.onrender.com`) using credentials for a user with a `customer` profile.
+3.  After a successful login, navigate directly to `https://wde-5p3f.onrender.com/admin/orders` in the browser's address bar.
+4.  **(Alternative via Automation):** Run the corresponding scenario in `cypress/integration/admin/features/authorization.feature` that tries to access `/admin/orders` as `customer`.
 
-## Resultado Esperado
+## Expected Result
 
-O usuário com perfil `cliente` **não deve** conseguir acessar ou visualizar qualquer conteúdo da página `/admin/orders`. A aplicação deve:
+The user with a `customer` profile **should not** be able to access or view any content on the `/admin/orders` page. The application should:
 
-- Redirecionar o usuário para uma página de erro de autorização padrão (ex: `/401`, `/403`)
-- **OU** Redirecionar o usuário para sua página inicial de cliente (ex: `/`)
-- **E** Exibir uma mensagem clara informando que o acesso àquela seção não é permitido para seu perfil.
+- Redirect the user to a standard authorization error page (e.g. `/401`, `/403`)
+- **OR** Redirect the user to their customer home page (e.g. `/`)
+- **AND** Display a clear message stating that access to that section isn't allowed for their profile.
 
-## Resultado Atual
+## Actual Result
 
-- O usuário com perfil `cliente` **consegue carregar** a URL `/admin/orders` sem ser redirecionado para uma página de erro de acesso negado (`/401` ou `/403`).
-- A página é renderizada de forma **parcial ou incompleta**:
-  - Elementos visuais chave da interface administrativa (como o título "Pedidos") podem estar ausentes.
-  - Controles específicos para manipulação de dados (como o dropdown para alterar status do pedido e o botão para submeter a alteração) não são exibidos ou estão desabilitados.
-- **VAZAMENTO DE DADOS CONFIRMADO:**
-  - Apesar da ausência dos controles, a estrutura da lista de pedidos **é carregada e exibe pedidos pertencentes a outros usuários**.
-  - Confirmação realizada manualmente após execução do teste E2E `purchase_flow.feature` (que criou um pedido para 'Cliente A'), onde um usuário diferente ('Cliente B', ou mesmo um usuário `admin`) logado acessando `/admin/orders` conseguiu visualizar detalhes do pedido do 'Cliente A' (produtos, data, status).
-  - **Limitação Observada:** Informações de identificação pessoal (PII) diretas, como nome completo e endereço do cliente associado ao pedido, _não foram observadas_ nesta visualização específica de `/admin/orders` acessada pelo perfil `cliente`. No entanto, os detalhes do pedido são expostos.
-- Nenhuma mensagem explícita de "Não Autorizado" que bloqueie completamente a visualização do conteúdo da página é exibida de forma proeminente.
+- The user with a `customer` profile **can load** the `/admin/orders` URL without being redirected to an access-denied error page (`/401` or `/403`).
+- The page renders **partially or incompletely**:
+  - Key admin UI elements (like the "Orders" title) may be missing.
+  - Controls specific to data manipulation (like the order-status dropdown and the submit button) aren't shown or are disabled.
+- **CONFIRMED DATA LEAK:**
+  - Despite the missing controls, the order list structure **loads and displays orders belonging to other users**.
+  - Confirmed manually after running the `purchase_flow.feature` E2E test (which created an order for "Customer A"), where a different user ("Customer B", or even an `admin` user) logged in and accessing `/admin/orders` was able to view Customer A's order details (products, date, status).
+  - **Observed limitation:** Direct personally identifiable information (PII), such as the customer's full name and address associated with the order, was _not observed_ in this specific `/admin/orders` view as accessed by the `customer` profile. However, order details are exposed.
+- No explicit "Not Authorized" message that fully blocks the page content from being viewed is shown prominently.
 
-## Evidências
+## Evidence
 
-- **Teste Automatizado (`authorization.feature`):** O cenário correspondente demonstra o acesso indevido à URL `/admin/orders` pelo perfil `cliente` (o teste pode falhar na asserção de redirecionamento esperado ou validar um status code incorreto). A _asserção específica de vazamento_ de dados de outros usuários não foi automatizada.
-- **Geração de Dados:** O teste E2E `purchase_flow.feature` foi utilizado para criar um pedido de teste conhecido para um usuário `cliente`.
-- **Verificação Manual:** Confirmação visual realizada acessando `/admin/orders` como outro usuário (`cliente` ou `admin`) após a geração do pedido de teste, observando a presença de pedidos não pertencentes ao usuário logado.
-- **Screenshots/Vídeos:**
-  - ![Painel Admin Acessado (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Admin-panel.png)
-  - ![Vazamento de Dados (Pedidos de Outros) (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Data-leak.png)
-  - ![Comportamento Esperado (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Expected-behavior.png)
-  - [Vídeo da Execução dos Testes de Autorização](../../evidence/authorization.feature.mp4)
+- **Automated Test (`authorization.feature`):** The corresponding scenario demonstrates improper access to the `/admin/orders` URL by the `customer` profile (the test may fail on the expected redirect assertion or validate an incorrect status code). The _specific assertion for the leak_ of other users' data wasn't automated.
+- **Data Generation:** The `purchase_flow.feature` E2E test was used to create a known test order for a `customer` user.
+- **Manual Verification:** Visual confirmation performed by accessing `/admin/orders` as another user (`customer` or `admin`) after generating the test order, observing the presence of orders not belonging to the logged-in user.
+- **Screenshots/Videos:**
+  - ![Admin Panel Accessed (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Admin-panel.png)
+  - ![Data Leak (Other Users' Orders) (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Data-leak.png)
+  - ![Expected Behavior (BUG-AUTH-002)](../../evidence/BUG-AUTH-002-Expected-behavior.png)
+  - [Authorization Tests Execution Video](../../evidence/authorization.feature.mp4)
 
-## Notas Adicionais / Ação Recomendada
+## Additional Notes / Recommended Action
 
-- Esta descoberta confirma o risco de vazamento de dados anteriormente levantado como "potencial" para a rota `/admin/orders`.
-- **Ação Principal:** Implementar uma verificação de autorização robusta no **backend** para a rota `/admin/orders`. Impedir completamente o acesso de usuários com perfil `cliente`, preferencialmente retornando um status `403 Forbidden` ou `401 Unauthorized` e/ou redirecionando no lado do servidor antes que a página ou dados sejam enviados ao frontend.
-- **Ação Secundária (Contenção Frontend):** Como medida adicional (mas não substituta), o frontend também pode implementar uma verificação de perfil e redirecionar o usuário `cliente` caso ele tente acessar a rota `/admin/orders` diretamente.
-- **Revisão de Segurança:** Recomenda-se uma revisão de segurança em _todas_ as rotas administrativas (`/admin/*`) para garantir que a validação de perfil (`admin` vs `cliente`) está sendo aplicada corretamente no backend.
+- This finding confirms the data-leak risk previously raised as "potential" for the `/admin/orders` route.
+- **Main action:** Implement a robust authorization check in the **backend** for the `/admin/orders` route. Fully prevent `customer` profile access, preferably returning a `403 Forbidden` or `401 Unauthorized` status and/or redirecting server-side before the page or data is sent to the frontend.
+- **Secondary action (Frontend containment):** As an additional measure (not a substitute), the frontend could also implement a profile check and redirect the `customer` user if they try to access the `/admin/orders` route directly.
+- **Security review:** A security review of _all_ admin routes (`/admin/*`) is recommended to ensure profile validation (`admin` vs `customer`) is being correctly enforced in the backend.

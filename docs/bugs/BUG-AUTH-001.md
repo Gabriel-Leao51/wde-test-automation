@@ -1,90 +1,90 @@
-# BUG-AUTH-001: Falha Crítica de Autorização - Acesso Indevido a CRUD de Produtos por Cliente
+# BUG-AUTH-001: Critical Authorization Failure - Improper Access to Product CRUD by Customer
 
-## Severidade
+## Severity
 
-**CRÍTICA (ALTO RISCO)**
+**CRITICAL (HIGH RISK)**
 
-- **Justificativa:** Vulnerabilidade de segurança extremamente grave. Permite que usuários não autorizados (`cliente`) manipulem **completamente** o catálogo de produtos (adição e edição), levando a potenciais danos financeiros, operacionais, reputacionais e legais catastróficos e generalizados para a loja online.
+- **Justification:** Extremely severe security vulnerability. Allows unauthorized users (`customer`) to **completely** manipulate the product catalog (adding and editing), leading to potentially catastrophic and widespread financial, operational, reputational, and legal damage to the online store.
 
-## Prioridade
+## Priority
 
-**IMEDIATA (MÁXIMA URGÊNCIA / EMERGÊNCIA)**
+**IMMEDIATE (MAXIMUM URGENCY / EMERGENCY)**
 
-- **Justificativa:** Dada a severidade CRÍTICA e o potencial impacto devastador, a resolução deve ser tratada como uma emergência absoluta, com interrupção de outras tarefas para foco na correção.
+- **Justification:** Given the CRITICAL severity and the potentially devastating impact, the fix should be treated as an absolute emergency, interrupting other work to focus on the correction.
 
-## Ambiente
+## Environment
 
-- **Aplicação:** WDE Shop
-- **URL Base:** `https://wde-5p3f.onrender.com`
-- **Endpoints Afetados:**
-  - `/admin/products` (permite acesso ao botão "Add product" e visualização)
-  - `/admin/products/add` (acesso direto ao formulário de adição - inferido)
-  - `/admin/products/edit/:id` (acesso direto ao formulário de edição)
-- **Perfil de Usuário:** `cliente` (não administrativo)
-- **Navegador/OS:** Google Chrome v.134 (ou conforme execução Cypress), Windows 11
-- **Ambiente de Teste:** Local (Cypress Runner) / CI (GitHub Actions) / Manual (Render)
+- **Application:** WDE Shop
+- **Base URL:** `https://wde-5p3f.onrender.com`
+- **Affected Endpoints:**
+  - `/admin/products` (allows access to the "Add product" button and viewing)
+  - `/admin/products/add` (direct access to the add form - inferred)
+  - `/admin/products/edit/:id` (direct access to the edit form)
+- **User Profile:** `customer` (non-admin)
+- **Browser/OS:** Google Chrome v.134 (or as run via Cypress), Windows 11
+- **Test Environment:** Local (Cypress Runner) / CI (GitHub Actions) / Manual (Render)
 
-## Detalhes do Relato
+## Report Details
 
-- **Relatado por:** Gabriel Leão
-- **Data da Descoberta:** 19/03/2025
-- **Referência Original:** TC_ADMIN_SECURITY_033 (Jira/Test Case ID)
+- **Reported by:** Gabriel Leão
+- **Date discovered:** 2025-03-19
+- **Original reference:** TC_ADMIN_SECURITY_033 (Jira/Test Case ID)
 
-## Passos para Reproduzir
+## Steps to Reproduce
 
-1.  Faça login na aplicação WDE Shop (`https://wde-5p3f.onrender.com`) utilizando credenciais de um usuário com perfil `cliente` (ex: `user@example.com` / `usertest`).
-2.  Após o login bem-sucedido (na área do cliente), modifique a URL na barra de endereços do navegador para acessar diretamente os endpoints administrativos:
-    - Para listar produtos e acessar o botão "Add": `https://wde-5p3f.onrender.com/admin/products`
-    - Para editar um produto (substitua `:id` por um ID válido): `https://wde-5p3f.onrender.com/admin/products/edit/:id`
-    - _Implícito/Provável:_ Para adicionar um produto diretamente: `https://wde-5p3f.onrender.com/admin/products/new`
-3.  Observe se o acesso é concedido e se é possível interagir com os formulários de adição/edição.
-4.  **(Opcional/Confirmação):** Tente efetivamente salvar uma alteração em um produto existente ou adicionar um novo produto.
-5.  **(Alternativa via Automação):** Execute os cenários correspondentes em `cypress/integration/admin/features/authorization.feature` que tentam acessar `/admin/products` e `/admin/products/edit/:id` como `cliente`.
+1.  Log in to the WDE Shop application (`https://wde-5p3f.onrender.com`) using credentials for a user with a `customer` profile (e.g. `user@example.com` / `usertest`).
+2.  After a successful login (in the customer area), change the URL in the browser's address bar to directly access the admin endpoints:
+    - To list products and access the "Add" button: `https://wde-5p3f.onrender.com/admin/products`
+    - To edit a product (replace `:id` with a valid ID): `https://wde-5p3f.onrender.com/admin/products/edit/:id`
+    - _Implied/Likely:_ To add a product directly: `https://wde-5p3f.onrender.com/admin/products/new`
+3.  Observe whether access is granted and whether it's possible to interact with the add/edit forms.
+4.  **(Optional/Confirmation):** Try to actually save a change to an existing product or add a new one.
+5.  **(Alternative via Automation):** Run the corresponding scenarios in `cypress/integration/admin/features/authorization.feature` that try to access `/admin/products` and `/admin/products/edit/:id` as `customer`.
 
-## Resultado Esperado (Conforme TC_ADMIN_SECURITY_033)
+## Expected Result (Per TC_ADMIN_SECURITY_033)
 
-- O usuário `cliente` **NÃO deve** conseguir acessar nenhuma das páginas/funcionalidades administrativas de produtos (`/admin/products`, `/admin/products/add`, `/admin/products/edit/:id`).
-- O usuário deve ser redirecionado para uma página de erro de autorização (ex: `/403 Forbidden` ou `/401 Unauthorized`).
-- Uma mensagem clara como "Not authorized - you are not authorized to access this page!" deve ser exibida, informando a falta de permissão.
+- The `customer` user **should NOT** be able to access any of the admin product pages/functionality (`/admin/products`, `/admin/products/add`, `/admin/products/edit/:id`).
+- The user should be redirected to an authorization error page (e.g. `/403 Forbidden` or `/401 Unauthorized`).
+- A clear message such as "Not authorized - you are not authorized to access this page!" should be displayed, informing the user of the lack of permission.
 
-## Resultado Atual (Falha Crítica de Segurança)
+## Actual Result (Critical Security Failure)
 
-- **FALHA:** O usuário `cliente` **CONSEGUE** acessar as páginas/formulários de listagem, adição e edição de produtos no painel administrativo.
-- **FALHA:** O usuário **NÃO é redirecionado** para uma página de erro 403/401. O acesso aos formulários é direto.
-- **FALHA:** Nenhuma mensagem de "Não autorizado" é exibida.
-- **CONFIRMAÇÃO GRAVE:** Foi confirmado que o usuário `cliente` pode não apenas visualizar, mas **EFETIVAMENTE ADICIONAR NOVOS PRODUTOS e EDITAR PRODUTOS EXISTENTES** através destes formulários acessados indevidamente. A manipulação completa do catálogo é possível.
+- **FAILURE:** The `customer` user **CAN** access the admin panel's product listing, add, and edit pages/forms.
+- **FAILURE:** The user is **NOT redirected** to a 403/401 error page. Access to the forms is direct.
+- **FAILURE:** No "Not authorized" message is displayed.
+- **SERIOUS CONFIRMATION:** It was confirmed that the `customer` user can not only view, but **ACTUALLY ADD NEW PRODUCTS and EDIT EXISTING PRODUCTS** through these improperly accessed forms. Full catalog manipulation is possible.
 
-## Evidências
+## Evidence
 
-- **Teste Automatizado (`authorization.feature`):** Os cenários correspondentes falham intencionalmente ao tentar acessar as URLs como `cliente`, comprovando a falha de redirecionamento/bloqueio esperado.
-- **Verificação Manual:** Acesso direto às URLs confirma a renderização das páginas administrativas para o perfil `cliente` e a capacidade de interação com os formulários.
-- **Screenshots/Vídeos:**
-  - ![Painel Admin Exposto (BUG-AUTH-001)](../../evidence/BUG-AUTH-001-Admin-panel-exposed.png)
-  - ![Formulário de Adição de Produto Exposto](../../evidence/BUG-AUTH-001-Add-product-form-exposed.png)
-  - ![Formulário de Edição Exposto (BUG-AUTH-001)](../../evidence/BUG-AUTH-001-Edit-product-form-exposed.png)
-  - [Vídeo da Execução dos Testes de Autorização](../../evidence/authorization.feature.mp4) - Screenshots/vídeos mostrando o acesso do cliente aos formulários de admin e, idealmente, a confirmação de uma adição/edição bem-sucedida.
+- **Automated Test (`authorization.feature`):** The corresponding scenarios intentionally fail when trying to access the URLs as `customer`, proving the expected redirect/block failure.
+- **Manual Verification:** Direct access to the URLs confirms the admin pages render for the `customer` profile and that the forms can be interacted with.
+- **Screenshots/Videos:**
+  - ![Admin Panel Exposed (BUG-AUTH-001)](../../evidence/BUG-AUTH-001-Admin-panel-exposed.png)
+  - ![Add Product Form Exposed](../../evidence/BUG-AUTH-001-Add-product-form-exposed.png)
+  - ![Edit Form Exposed (BUG-AUTH-001)](../../evidence/BUG-AUTH-001-Edit-product-form-exposed.png)
+  - [Authorization Tests Execution Video](../../evidence/authorization.feature.mp4) - Screenshots/videos showing customer access to the admin forms and, ideally, confirmation of a successful add/edit.
 
-## Análise de Causa Raiz (Provável)
+## Root Cause Analysis (Likely)
 
-- Ausência **total ou falha crítica** na implementação de verificação de **autorização (permissões/role)** no backend para as rotas e funcionalidades de gerenciamento de produtos (`/admin/products/*`).
-- A proteção pode estar baseada apenas em **autenticação** (usuário logado), ignorando completamente o perfil/role (`admin` vs `cliente`) necessário para acessar estas funções.
+- **Total absence or critical failure** in implementing backend **authorization (permission/role) checks** for product management routes and functionality (`/admin/products/*`).
+- Protection may be based only on **authentication** (user logged in), completely ignoring the profile/role (`admin` vs `customer`) required to access these functions.
 
-## Impacto Potencial (Catastrófico)
+## Potential Impact (Catastrophic)
 
-- **Manipulação e Corrupção Total de Dados de Produtos:**
-  - Alteração massiva de preços (para zero, valores absurdos).
-  - Modificação de descrições/títulos com conteúdo falso, ofensivo, ilegal.
-  - Substituição de imagens por conteúdo impróprio/ilegal.
-  - **Adição de produtos falsos, ilegais, spam, ou de concorrentes.**
-- **Danos Financeiros Catastróficos:** Vendas com prejuízo, multas, perda de receita e investidores.
-- **Danos Reputacionais Irreversíveis:** Perda total de confiança do cliente, destruição da imagem da marca.
-- **Problemas Operacionais Insuportáveis:** Caos na gestão de estoque, pedidos, atendimento ao cliente.
-- **Riscos Legais Graves:** Processos devido a conteúdo ilegal, produtos falsos, violação de termos.
+- **Total Manipulation and Corruption of Product Data:**
+  - Mass price changes (to zero, absurd values).
+  - Modification of descriptions/titles with false, offensive, illegal content.
+  - Replacement of images with inappropriate/illegal content.
+  - **Addition of fake, illegal, spam, or competitor products.**
+- **Catastrophic Financial Damage:** Loss-making sales, fines, lost revenue and investors.
+- **Irreversible Reputational Damage:** Total loss of customer trust, destruction of the brand's image.
+- **Unbearable Operational Problems:** Chaos in inventory management, orders, customer service.
+- **Serious Legal Risks:** Lawsuits due to illegal content, fake products, terms-of-service violations.
 
-## Recomendações (Ações Urgentes e Extremas)
+## Recommendations (Urgent and Extreme Actions)
 
-1.  **CORREÇÃO IMEDIATA:** Implementar um sistema de **autorização baseado em roles (perfis)** robusto e intransigente no **backend** para TODAS as rotas e operações dentro de `/admin/*`, bloqueando completamente o acesso não autorizado (especialmente para `cliente`).
-2.  **VERIFICAÇÃO OBRIGATÓRIA:** Garantir que a checagem de autorização ocorra em **cada requisição** ao backend para funcionalidades administrativas, sem exceção.
-3.  **REVISÃO DE SEGURANÇA URGENTE:** Realizar uma auditoria de segurança completa por especialistas em toda a aplicação, focando em controle de acesso e autorização.
-4.  **TESTES AUTOMATIZADOS:** Implementar testes de segurança automatizados **extensivos** (focando em autorização para todas as roles e rotas admin) no pipeline de CI/CD para prevenir regressões.
-5.  **MEDIDA DE CONTENÇÃO (Considerar):** Avaliar a necessidade **imediata** de colocar o painel `/admin` offline ou restringir o acesso **apenas** a um grupo mínimo de administradores confiáveis **até que a correção seja implementada e validada**, dada a gravidade extrema da falha.
+1.  **IMMEDIATE FIX:** Implement robust, uncompromising **role-based authorization** in the **backend** for ALL routes and operations under `/admin/*`, completely blocking unauthorized access (especially for `customer`).
+2.  **MANDATORY VERIFICATION:** Ensure the authorization check happens on **every request** to the backend for admin functionality, no exceptions.
+3.  **URGENT SECURITY REVIEW:** Perform a full security audit by specialists across the entire application, focusing on access control and authorization.
+4.  **AUTOMATED TESTS:** Implement **extensive** automated security tests (covering authorization for every role and admin route) in the CI/CD pipeline to prevent regressions.
+5.  **CONTAINMENT MEASURE (Consider):** Evaluate the **immediate** need to take the `/admin` panel offline or restrict access to **only** a minimal group of trusted administrators **until the fix is implemented and validated**, given the extreme severity of the flaw.

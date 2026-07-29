@@ -12,10 +12,10 @@ def scenario_context():
     return {}
 
 
-@given(parsers.parse('que eu estou logado como "{user_type}"'))
+@given(parsers.parse('I am logged in as "{user_type}"'))
 def logged_in_as(user_type, login_as, page):
-    """Shared login step, equivalent to commonSteps.js, used via Background/Contexto."""
+    """Shared login step, equivalent to commonSteps.js, used via Background."""
     login_as(user_type)
 
-    if user_type.lower() == "cliente":
+    if user_type.lower() == "customer":
         expect(page.locator("#main-header").get_by_role("link", name="Orders")).to_be_visible()

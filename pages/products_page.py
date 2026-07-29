@@ -20,7 +20,7 @@ class ProductsPage:
         self.save_button = page.get_by_role("button", name="Save")
         self.add_to_cart_button = page.get_by_role("button", name="Add to Cart")
 
-    # --- Elementos (parametrizados) ---
+    # --- Elements (parameterized) ---
 
     def product_list_item(self, product_title: str):
         return self.page.locator("article.product-item").filter(has_text=product_title)
@@ -40,7 +40,7 @@ class ProductsPage:
     def view_details_button(self, product_title: str):
         return self.product_list_item(product_title).get_by_role("link", name="View Details")
 
-    # --- Ações ---
+    # --- Actions ---
 
     def click_manage_products_link(self):
         expect(self.manage_products_link).to_be_visible()
@@ -97,8 +97,8 @@ class ProductsPage:
         product_id = button.get_attribute("data-productid")
         if not product_id:
             raise ValueError(
-                f'Não foi possível encontrar o atributo "data-productid" no botão Delete '
-                f'para o produto "{product_title}".'
+                f'Could not find the "data-productid" attribute on the Delete button '
+                f'for the product "{product_title}".'
             )
         button.click()
         return product_id
@@ -115,7 +115,7 @@ class ProductsPage:
         self.add_to_cart_button.click()
         return self
 
-    # --- Asserções ---
+    # --- Assertions ---
 
     def assert_product_added_successfully(self, product_title: str):
         expect(self.page).to_have_url(re.compile(r".*/admin/products"))

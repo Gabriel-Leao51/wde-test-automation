@@ -70,14 +70,14 @@ def stripe_checkout_page(page):
 
 @pytest.fixture
 def login_as(login_page, users):
-    """Factory fixture equivalent to commonSteps.js's 'que eu estou logado como {string}'."""
+    """Factory fixture equivalent to commonSteps.js's 'I am logged in as "{string}"'."""
 
     def _login_as(role: str):
         role_key = role.lower()
         credentials = users.get(role_key)
 
         if not credentials or not credentials.get("email") or not credentials.get("password"):
-            raise ValueError(f'Credenciais para "{role_key}" não encontradas em users.json')
+            raise ValueError(f'Credentials for "{role_key}" not found in users.json')
 
         login_page.login(credentials["email"], credentials["password"])
         return credentials

@@ -7,7 +7,7 @@
     "email": "invalid@test.com",
     "password": "wrongpassword"
   },
-  "cliente": {
+  "customer": {
     "email": "user2@example.com",
     "password": "usertest",
     "name": "User B"

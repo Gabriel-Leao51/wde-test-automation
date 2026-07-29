@@ -1,21 +1,21 @@
-# language: pt
-Funcionalidade: Fluxo de Compra E2E do Cliente
+# language: en
+Feature: Customer E2E Purchase Flow
 
-  Como um cliente registrado da WDE Shop
-  Eu quero encontrar um produto específico, adicioná-lo ao carrinho,
-  e finalizar a compra usando pagamento de teste
-  Para garantir que o processo principal de aquisição funciona corretamente
+  As a registered WDE Shop customer
+  I want to find a specific product, add it to the cart,
+  and complete the purchase using test payment
+  To ensure the main acquisition process works correctly
 
-  Contexto: Cliente está logado
-    Dado que eu estou logado como "cliente"
+  Background: Customer is logged in
+    Given I am logged in as "customer"
 
-  Cenario: Cliente realiza compra de um produto específico com sucesso
-    Quando eu clico em "View Details" para o produto "GTRACING - Black Gaming Chair"
-    E eu clico no botão "Add to Cart" na página de detalhes do produto
-    Entao o indicador do carrinho na barra de navegação deve ser atualizado para "1"
-    Quando eu clico no link "Cart" da barra de navegação
-    Entao eu devo ver o produto "GTRACING - Black Gaming Chair" listado no carrinho
-    Quando eu clico no botão "Buy Products"
-    Entao eu devo ser redirecionado para a página de pagamento externa do Stripe
-    Quando eu preencho os dados do cartão de teste do Stripe e confirmo o pagamento
-    Entao eu devo ser redirecionado para a página de sucesso do pedido
+  Scenario: Customer successfully purchases a specific product
+    When I click "View Details" for the product "GTRACING - Black Gaming Chair"
+    And I click the "Add to Cart" button on the product details page
+    Then the cart indicator in the navigation bar should be updated to "1"
+    When I click the "Cart" link in the navigation bar
+    Then I should see the product "GTRACING - Black Gaming Chair" listed in the cart
+    When I click the "Buy Products" button
+    Then I should be redirected to the external Stripe payment page
+    When I fill in the Stripe test card details and confirm payment
+    Then I should be redirected to the order success page

@@ -1,18 +1,18 @@
-#language: pt
-Funcionalidade: Gerenciar Pedidos - Painel Administrativo
+# language: en
+Feature: Manage Orders - Admin Panel
 
-    Como um administrador logado
-    Eu quero ser capaz de gerenciar o status de pedidos no painel administrativo
-    Para manter o controle de vendas da loja atualizado
+    As a logged-in administrator
+    I want to be able to manage order status in the admin panel
+    To keep the store's sales records up to date
 
-    Contexto:
-        Dado que eu estou logado como "admin"
-        E eu navego para a pagina de gerenciamento de pedidos
+    Background:
+        Given I am logged in as "admin"
+        And I navigate to the manage orders page
 
     @crud @order @happy-path
-    Cenario: Alterar status de um pedido para "Fulfilled" com sucesso
-        Dado que um pedido com status "Pending" conhecido existe
-        Quando eu localizo o pedido conhecido na lista de pedidos
-        E eu seleciono o novo status "Fulfilled" para este pedido
-        E eu clico no botao "Update" deste pedido
-        Entao o status "FULFILLED" deve ser exibido para este pedido
+    Scenario: Successfully change an order's status to "Fulfilled"
+        Given a known order with status "Pending" exists
+        When I locate the known order in the order list
+        And I select the new status "Fulfilled" for this order
+        And I click the "Update" button for this order
+        Then the status "FULFILLED" should be displayed for this order

@@ -1,24 +1,24 @@
-# language: pt
-Funcionalidade: Login Administrativo
-    Como um administrador
-    Eu quero fazer login no painel administrativo
-    Para acessar as funcionalidades de gerenciamento do sistema
+# language: en
+Feature: Admin Login
+    As an administrator
+    I want to log in to the admin panel
+    To access the system's management features
 
     @auth @login-admin @happy-path
-    Cenario: Login administrativo bem-sucedido
-        Dado que eu estou na pagina de login administrativo
-        Quando eu insiro um email de administrador valido 
-        E eu insiro uma senha de administrador valida
-        E eu clico no botao de "Login"
-        Entao eu devo ser redirecionado para a pagina principal do painel administrativo
-        E eu devo ver as opcoes de menu "Manage Products" e "Manage Orders"
-        E eu devo ver o botao "Logout" no cabecalho
+    Scenario: Successful admin login
+        Given I am on the admin login page
+        When I enter a valid admin email
+        And I enter a valid admin password
+        And I click the "Login" button
+        Then I should be redirected to the admin panel home page
+        And I should see the "Manage Products" and "Manage Orders" menu options
+        And I should see the "Logout" button in the header
 
-    @auth @login-admin @negative-case  
-    Cenario: Login administrativo falha - Credenciais invalidas
-        Dado que eu estou na pagina de login
-        Quando eu insiro um email invalido
-        E eu insiro uma senha invalida
-        E eu clico no botão de "Login"
-        Entao eu devo ver uma mensagem de erro
-        E eu devo permanecer na pagina de login
+    @auth @login-admin @negative-case
+    Scenario: Admin login fails - Invalid credentials
+        Given I am on the login page
+        When I enter an invalid email
+        And I enter an invalid password
+        And I click the "Login" button
+        Then I should see an error message
+        And I should remain on the login page

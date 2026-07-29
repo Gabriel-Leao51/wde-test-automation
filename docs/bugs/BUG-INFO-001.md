@@ -1,48 +1,48 @@
-# BUG-INFO-001: Exposição de Detalhes Internos do Servidor em Páginas de Erro
+# BUG-INFO-001: Exposure of Internal Server Details on Error Pages
 
-## Severidade
+## Severity
 
-**ALTA**
+**HIGH**
 
-- **Justificativa:** Qualquer erro não tratado (não só o cenário reproduzido aqui) expõe caminhos completos do sistema de arquivos do servidor, trechos de código-fonte dos templates EJS e stack traces do Node.js diretamente ao cliente — inclusive a usuários não autenticados. Facilita reconhecimento (fingerprinting) da stack e da estrutura interna da aplicação para um atacante planejar outros ataques.
+- **Justification:** Any unhandled error (not just the scenario reproduced here) exposes full server filesystem paths, EJS template source-code snippets, and Node.js stack traces directly to the client — including unauthenticated users. This makes it easier for an attacker to fingerprint the stack and internal structure of the application when planning further attacks.
 
-## Prioridade
+## Priority
 
-**ALTA**
+**HIGH**
 
-## Ambiente
+## Environment
 
-- **Aplicação:** WDE Shop
-- **URL Base:** `http://localhost:3000` (stack local via Docker Compose, ver `wde/docker-compose.yml`)
-- **Endpoint Afetado:** qualquer rota que dispare uma exceção não tratada e caia no `errorHandlerMiddleware` — reproduzido aqui via `POST /cart/items` sem token CSRF válido
-- **Perfil de Usuário:** não autenticado (não requer login)
+- **Application:** WDE Shop
+- **Base URL:** `http://localhost:3000` (local stack via Docker Compose, see `wde/docker-compose.yml`)
+- **Affected Endpoint:** any route that triggers an unhandled exception and falls into `errorHandlerMiddleware` — reproduced here via `POST /cart/items` without a valid CSRF token
+- **User Profile:** unauthenticated (no login required)
 
-## Detalhes do Relato
+## Report Details
 
-- **Relatado por:** Gabriel Leão (com assistência de Claude)
-- **Data da Descoberta:** 24/07/2026
-- **Contexto:** encontrado durante expansão da cobertura de segurança da suíte de testes, ao investigar o comportamento de `csurf` para requisições sem token CSRF válido.
+- **Reported by:** Gabriel Leão (with assistance from Claude)
+- **Date discovered:** 2026-07-24
+- **Context:** found while expanding the test suite's security coverage, investigating `csurf`'s behavior for requests without a valid CSRF token.
 
-## Passos para Reproduzir
+## Steps to Reproduce
 
-1. Sem estar autenticado, envie uma requisição `POST` para um endpoint protegido por CSRF (ex: `/cart/items`) **sem** incluir o parâmetro `_csrf`:
+1. While unauthenticated, send a `POST` request to a CSRF-protected endpoint (e.g. `/cart/items`) **without** including the `_csrf` parameter:
    ```bash
-   curl -X POST http://localhost:3000/cart/items --data-urlencode "productId=<id-valido>"
+   curl -X POST http://localhost:3000/cart/items --data-urlencode "productId=<valid-id>"
    ```
-2. Observe a resposta HTTP.
+2. Observe the HTTP response.
 
-## Resultado Esperado
+## Expected Result
 
-- Uma resposta de erro genérica (idealmente `403 Forbidden` para token CSRF inválido/ausente), sem detalhes de implementação, caminhos de arquivo ou stack traces.
+- A generic error response (ideally `403 Forbidden` for an invalid/missing CSRF token), with no implementation details, file paths, or stack traces.
 
-## Resultado Atual (Falha)
+## Actual Result (Failure)
 
-- A resposta é `500 Internal Server Error` contendo o HTML completo do handler de erro padrão do Express, incluindo:
-  - Caminhos absolutos do servidor (`/usr/src/app/views/shared/500.ejs`, `/usr/src/app/views/shared/includes/header.ejs`, etc.)
-  - Trechos do código-fonte dos templates EJS
-  - Stack trace completo, incluindo caminhos de `node_modules`
+- The response is `500 Internal Server Error` containing the full HTML of Express's default error handler, including:
+  - Absolute server paths (`/usr/src/app/views/shared/500.ejs`, `/usr/src/app/views/shared/includes/header.ejs`, etc.)
+  - EJS template source-code snippets
+  - A full stack trace, including `node_modules` paths
 
-Trecho real da resposta capturada:
+Real captured response excerpt:
 
 ```
 TypeError: /usr/src/app/views/shared/500.ejs:4
@@ -55,29 +55,29 @@ Cannot read properties of undefined (reading 'totalQuantity')
     ...
 ```
 
-## Evidências
+## Evidence
 
-- **Teste Automatizado:** `features/security/hardening.feature`, cenário "Erros internos não devem expor caminhos e código-fonte do servidor" (`@xfail`, tag `@error-handling`) — falha intencionalmente contra o comportamento atual, comprovando a exposição.
-- **Reprodução manual:** comando `curl` acima, testado em 24/07/2026 contra a stack local.
+- **Automated Test:** `features/security/hardening.feature`, scenario "Internal errors should not expose server file paths and source code" (`@xfail`, tag `@error-handling`) — intentionally fails against the current behavior, proving the exposure.
+- **Manual reproduction:** the `curl` command above, tested on 2026-07-24 against the local stack.
 
-## Análise de Causa Raiz
+## Root Cause Analysis
 
-Duas causas se combinam para produzir esse resultado:
+Two causes combine to produce this result:
 
-1. **`NODE_ENV` nunca é definido como `production`** em nenhum lugar (`Dockerfile`, `docker-compose.yml`, ou no próprio código da aplicação). O Express usa modo de desenvolvimento por padrão, que inclui detalhes verbosos de erro nas respostas — comportamento correto para depuração local, mas nunca desabilitado antes do deploy/execução "real" da stack.
-2. **Falha em cascata no próprio handler de erro:** `middlewares/error-handler.js` tenta renderizar `views/shared/500.ejs`, que inclui `header.ejs` → `nav-items.ejs`. Esse último template lê `locals.cart.totalQuantity` incondicionalmente. Como `csurf()` é registrado em `app.js` **antes** de `cartMiddleware`, uma rejeição de CSRF nunca chega a popular `res.locals.cart` — a própria renderização da página de erro lança uma nova exceção, e o Express recorre ao seu handler de erro padrão (que é quem efetivamente vaza os detalhes internos).
+1. **`NODE_ENV` is never set to `production`** anywhere (`Dockerfile`, `docker-compose.yml`, or the application code itself). Express defaults to development mode, which includes verbose error details in responses — correct behavior for local debugging, but never disabled before a "real" run of the stack.
+2. **Cascading failure in the error handler itself:** `middlewares/error-handler.js` tries to render `views/shared/500.ejs`, which includes `header.ejs` → `nav-items.ejs`. That last template reads `locals.cart.totalQuantity` unconditionally. Since `csurf()` is registered in `app.js` **before** `cartMiddleware`, a CSRF rejection never reaches the point where `res.locals.cart` gets populated — rendering the error page itself throws a new exception, and Express falls back to its default error handler (which is what actually leaks the internal details).
 
-Importante: esse encadeamento específico **não derruba o processo Node** (diferente do bug de NoSQL injection já corrigido) — é uma falha síncrona durante a renderização, capturada pelo próprio Express. O problema é puramente de exposição de informação e de UX de erro quebrada, não de disponibilidade.
+Important: this specific chain of events **does not crash the Node process** (unlike the already-fixed NoSQL injection bug) — it's a synchronous failure during rendering, caught by Express itself. The problem is purely information exposure and a broken error UX, not availability.
 
-## Impacto Potencial
+## Potential Impact
 
-- Vazamento de estrutura interna do servidor e da aplicação, útil para um atacante mapear a stack tecnológica e planejar ataques mais direcionados.
-- Qualquer outro erro não tratado no restante da aplicação está sujeito ao mesmo vazamento, não apenas o caminho de CSRF usado para reproduzir aqui.
-- Usuários finais veem uma página de erro genuinamente quebrada (a página de erro da própria aplicação falha ao renderizar) em vez de uma mensagem amigável.
+- Leaks the server's and application's internal structure, useful for an attacker mapping the technology stack to plan more targeted attacks.
+- Any other unhandled error elsewhere in the application is subject to the same leak, not just the CSRF path used to reproduce it here.
+- End users see a genuinely broken error page (the application's own error page fails to render) instead of a friendly message.
 
-## Recomendações
+## Recommendations
 
-1. Definir `NODE_ENV=production` na configuração de execução da stack (`docker-compose.yml` do repositório `wde`), garantindo que o Express não exponha detalhes de erro em nenhum ambiente que não seja explicitamente de desenvolvimento local.
-2. Corrigir `nav-items.ejs` para não presumir que `locals.cart` sempre existe (ex: `locals.cart?.totalQuantity || 0`, ou garantir um valor padrão em `res.locals` antes de qualquer possibilidade de erro).
-3. Padronizar o `errorHandlerMiddleware` para nunca deixar uma falha na própria renderização da página de erro escapar para o handler padrão do Express — por exemplo, envolvendo o `res.render` em try/catch com um fallback em texto puro.
-4. Garantir que erros de CSRF retornem um código de status mais preciso (`403`) em vez do genérico `500`.
+1. Set `NODE_ENV=production` in the stack's run configuration (`wde` repository's `docker-compose.yml`), ensuring Express never exposes error details in any environment other than explicit local development.
+2. Fix `nav-items.ejs` to not assume `locals.cart` always exists (e.g. `locals.cart?.totalQuantity || 0`, or ensure a default value on `res.locals` before any possibility of an error).
+3. Standardize `errorHandlerMiddleware` so a failure in rendering the error page itself never escapes to Express's default handler — for example, wrapping `res.render` in a try/catch with a plain-text fallback.
+4. Ensure CSRF errors return a more precise status code (`403`) instead of the generic `500`.

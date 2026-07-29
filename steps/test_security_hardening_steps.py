@@ -29,7 +29,7 @@ def _get_csrf_token(page, path="/login"):
 # --- NoSQL injection (regression tests - the underlying bug is fixed) ---
 
 
-@when(parsers.parse('eu envio um payload de NoSQL injection para "{path}"'))
+@when(parsers.parse('I send a NoSQL injection payload to "{path}"'))
 def send_nosql_injection_payload(page, scenario_context, path):
     csrf_token = _get_csrf_token(page, path)
     payload = {"email": {"$ne": None}, "password": {"$ne": None}}
@@ -46,12 +46,12 @@ def send_nosql_injection_payload(page, scenario_context, path):
     scenario_context["response"] = page.request.post(f"{path}?_csrf={csrf_token}", data=payload)
 
 
-@then("eu devo receber uma resposta de credenciais invalidas")
+@then("I should receive an invalid credentials response")
 def assert_invalid_credentials_response(scenario_context):
     assert "Invalid credentials" in scenario_context["response"].text()
 
 
-@then("a aplicacao deve permanecer no ar")
+@then("the application should remain up")
 def assert_app_still_up(page):
     response = page.request.get("/products")
     assert response.status == 200
@@ -60,24 +60,24 @@ def assert_app_still_up(page):
 # --- Security headers ---
 
 
-@when(parsers.parse('eu faco uma requisicao GET para "{path}"'))
+@when(parsers.parse('I make a GET request to "{path}"'))
 def make_get_request(page, scenario_context, path):
     scenario_context["response"] = page.request.get(path)
 
 
-@then(parsers.parse('a resposta deve conter o header "{header_name}" com valor "{header_value}"'))
+@then(parsers.parse('the response should contain the header "{header_name}" with value "{header_value}"'))
 def assert_header_value(scenario_context, header_name, header_value):
     headers = scenario_context["response"].headers
     assert headers.get(header_name) == header_value, f"headers: {headers}"
 
 
-@then(parsers.parse('a resposta deve conter o header "{header_name}"'))
+@then(parsers.parse('the response should contain the header "{header_name}"'))
 def assert_header_present(scenario_context, header_name):
     headers = scenario_context["response"].headers
     assert header_name in headers, f"headers: {headers}"
 
 
-@then(parsers.parse('a resposta nao deve conter o header "{header_name}"'))
+@then(parsers.parse('the response should not contain the header "{header_name}"'))
 def assert_header_absent(scenario_context, header_name):
     headers = scenario_context["response"].headers
     assert header_name not in headers, f"headers: {headers}"
@@ -86,12 +86,12 @@ def assert_header_absent(scenario_context, header_name):
 # --- CSRF token exposure in URL ---
 
 
-@when("eu visito a pagina de novo produto")
+@when("I visit the new product page")
 def visit_new_product_page(page):
     page.goto("/admin/products/new")
 
 
-@then("o atributo action do formulario nao deve conter \"_csrf\"")
+@then("the form's action attribute should not contain \"_csrf\"")
 def assert_csrf_not_in_form_action(page):
     form_action = page.locator("main form").first.get_attribute("action")
     assert "_csrf" not in (form_action or ""), f"form action: {form_action}"
@@ -100,14 +100,14 @@ def assert_csrf_not_in_form_action(page):
 # --- Session cookie flags ---
 
 
-@then("o cookie de sessao deve ter a flag Secure habilitada")
+@then("the session cookie should have the Secure flag enabled")
 def assert_session_cookie_secure(page):
     cookies = page.context.cookies()
     session_cookie = next(c for c in cookies if c["name"] == "connect.sid")
     assert session_cookie["secure"] is True, f"cookie: {session_cookie}"
 
 
-@then("o cookie de sessao deve ter a flag SameSite configurada")
+@then("the session cookie should have the SameSite flag configured")
 def assert_session_cookie_samesite(page):
     cookies = page.context.cookies()
     session_cookie = next(c for c in cookies if c["name"] == "connect.sid")
@@ -117,7 +117,7 @@ def assert_session_cookie_samesite(page):
 # --- Verbose error / information disclosure ---
 
 
-@when("eu envio uma requisicao que causa um erro interno no servidor")
+@when("I send a request that triggers an internal server error")
 def trigger_internal_server_error(page, scenario_context):
     # POST to a CSRF-protected endpoint without a token: csurf's own middleware rejects it
     # before cartMiddleware ever runs, so the error page's nav render crashes too (BUG-INFO-001).
@@ -126,13 +126,13 @@ def trigger_internal_server_error(page, scenario_context):
     )
 
 
-@then("a resposta nao deve conter caminhos do sistema de arquivos do servidor")
+@then("the response should not contain server filesystem paths")
 def assert_no_filesystem_paths_leaked(scenario_context):
     body = scenario_context["response"].text()
     assert "/usr/src/app" not in body, "response body leaks server filesystem paths"
 
 
-@then("a resposta nao deve conter trechos de codigo-fonte do servidor")
+@then("the response should not contain server source code snippets")
 def assert_no_source_code_leaked(scenario_context):
     body = scenario_context["response"].text()
     assert "node_modules" not in body, "response body leaks server source/stack trace details"
@@ -151,7 +151,7 @@ def _sign_session_id(sid: str, secret: str) -> str:
     return f"s:{sid}.{signature}"
 
 
-@when("eu forjo um cookie de sessao de administrador usando o segredo hardcoded do codigo-fonte")
+@when("I forge an admin session cookie using the hardcoded secret from the source code")
 def forge_admin_session_cookie(scenario_context):
     client = pymongo.MongoClient(MONGODB_URI)
     db = client[SESSION_DB_NAME]
@@ -187,7 +187,7 @@ def forge_admin_session_cookie(scenario_context):
     scenario_context["forged_cookie"] = quote(signed_value, safe="")
 
 
-@when(parsers.parse('eu acesso "{path}" usando apenas o cookie forjado'))
+@when(parsers.parse('I access "{path}" using only the forged cookie'))
 def access_with_forged_cookie(playwright, base_url, scenario_context, path):
     # A brand-new, isolated request context - no ambient cookies from any
     # other step - so the only thing granting access (if anything does) is
@@ -200,7 +200,7 @@ def access_with_forged_cookie(playwright, base_url, scenario_context, path):
     scenario_context["forged_request_context"] = request_context
 
 
-@then("o acesso NAO deve ser concedido sem um login de verdade")
+@then("access should NOT be granted without a real login")
 def assert_forged_session_does_not_grant_access(scenario_context):
     response = scenario_context["forged_response"]
     body = response.text()
