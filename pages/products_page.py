@@ -16,6 +16,7 @@ class ProductsPage:
         self.product_image_input = page.locator("#image")
         self.product_summary_input = page.locator("#summary")
         self.product_price_input = page.locator("#price")
+        self.product_department_select = page.locator("#department")
         self.product_description_input = page.locator("#description")
         self.save_button = page.get_by_role("button", name="Save")
         self.add_to_cart_button = page.get_by_role("button", name="Add to Cart")
@@ -65,6 +66,10 @@ class ProductsPage:
         for field, value in product_data.items():
             if field == "image":
                 self.product_image_input.set_input_files(str(TEST_DATA_DIR / value))
+                continue
+
+            if field == "department":
+                self.product_department_select.select_option(str(value))
                 continue
 
             locator = field_map.get(field)

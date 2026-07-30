@@ -19,6 +19,7 @@ Feature: Manage Products - Admin Panel
             | image       | mousepad.jpg                             |
             | summary     | A great mousepad for testing             |
             | price       | 35                                       |
+            | department  | Office                                   |
             | description | Ideal mousepad for automated testing     |
         And I click the "Save" button
         Then I should be redirected to the manage products page "/admin/products"
