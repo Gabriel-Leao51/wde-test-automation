@@ -36,6 +36,7 @@ markers = [
     "error-handling: error handling scenarios",
     "visual: visual regression scenarios (screenshot vs. baseline)",
     "localization: language selector / i18n scenarios",
+    "catalog: product catalog filter/sort/search scenarios",
 ]
 playwright_visual_snapshots_path = "__snapshots__"
 
