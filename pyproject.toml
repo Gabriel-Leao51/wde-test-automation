@@ -35,6 +35,7 @@ markers = [
     "session: cookie/session scenarios",
     "error-handling: error handling scenarios",
     "visual: visual regression scenarios (screenshot vs. baseline)",
+    "localization: language selector / i18n scenarios",
 ]
 playwright_visual_snapshots_path = "__snapshots__"
 

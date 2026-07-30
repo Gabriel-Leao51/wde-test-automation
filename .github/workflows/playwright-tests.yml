@@ -101,6 +101,18 @@ jobs:
         # generated baselines would never match here. Single browser only, to avoid
         # tripling baseline maintenance across the matrix.
 
+      - name: Run language selector tests (chromium only)
+        if: matrix.browser == 'chromium'
+        env:
+          WDE_BASE_URL: http://localhost:3000
+        run: >
+          uv run pytest --browser=chromium
+          --html=playwright-report/language-selector-report.html
+          steps/test_language_selector_steps.py
+        # No browser-specific rendering risk here (plain text assertions via
+        # get_by_role), so chromium-only avoids redundant runs across the matrix -
+        # same rationale as the visual regression step above.
+
       - name: Upload Playwright artifacts
         if: always()
         uses: actions/upload-artifact@v4

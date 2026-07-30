@@ -83,3 +83,15 @@ def login_as(login_page, users):
         return credentials
 
     return _login_as
+
+
+@pytest.fixture
+def set_language(page):
+    """Factory fixture setting the storefront language via GET /lang/:code -
+    equivalent to clicking the EN/PT switcher, without needing it to already
+    be visible on the current page."""
+
+    def _set_language(lang: str):
+        page.goto(f"/lang/{lang}")
+
+    return _set_language

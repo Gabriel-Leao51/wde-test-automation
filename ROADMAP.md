@@ -198,7 +198,7 @@ Key decisions:
 
 - [x] **Track 1** — Convert `wde_automacao` to English (this document, `README.md`, `docs/bugs/*.md`, every `.feature` file, step-matcher strings, comments, the `"cliente"` → `"customer"` role key).
 - [ ] **Track 2** — `wde`: i18n infrastructure, language selector, localized product catalog copy.
-- [ ] **Track 3** — `wde_automacao`: language-selector scenarios (a `Scenario Outline`/`Examples` first for this suite).
+- [x] **Track 3** — `wde_automacao`: language-selector scenarios. `features/localization/language_selector.feature` — a `Scenario Outline`/`Examples` (a first for this suite) covering both EN and PT nav-label switching, plus a separate scenario proving product *content* (not just nav chrome) is localized. A `set_language` factory fixture (mirrors `login_as`) backs a reusable `Given the language is set to "..."` step for future scenarios that need a language precondition. Runs as its own chromium-only CI step (no browser-specific rendering risk, so no need to triple it across the matrix).
 - [ ] **Track 4** — Catalog overhaul, sub-phased deliberately slowly:
   - [ ] 4a. `department` field + a meaningfully larger seed catalog with generated placeholder thumbnails
   - [ ] 4b. Backend filter/sort (`?department=&sort=`)
