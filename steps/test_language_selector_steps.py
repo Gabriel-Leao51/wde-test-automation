@@ -30,8 +30,3 @@ def assert_catalog_heading(page, catalog_heading):
 @when(parsers.parse('I view the product with id "{product_id}"'))
 def view_product_with_id(page, product_id):
     page.goto(f"/products/{product_id}")
-
-
-@then(parsers.parse('I should see the product titled "{title}"'))
-def assert_product_title(page, title):
-    expect(page.get_by_role("heading", name=title, level=1)).to_be_visible()

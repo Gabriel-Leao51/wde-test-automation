@@ -42,3 +42,19 @@ Feature: Product Catalog - Filtering and Sorting
     When I select "Price: Low to High" from the sort dropdown
     And I click the "Filter" button
     Then the listed products should be in ascending price order
+
+  Scenario: Live search suggests matching products as I type
+    Given I am on the product catalog
+    When I type "chair" into the product search box
+    Then I should see search suggestions including "GTRACING - Black Gaming Chair"
+    And I should see search suggestions including "Ergonomic Office Chair"
+
+  Scenario: Selecting a live search suggestion navigates to that product
+    Given I am on the product catalog
+    When I type "chair" into the product search box
+    And I click the search suggestion "Ergonomic Office Chair"
+    Then I should see the product titled "Ergonomic Office Chair"
+
+  Scenario: The search API returns matching products as JSON
+    When I request the search API with query "yoga"
+    Then the JSON response should include a product titled "Yoga Mat"

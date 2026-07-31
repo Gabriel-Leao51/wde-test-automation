@@ -1,6 +1,6 @@
 import pytest
 from playwright.sync_api import expect
-from pytest_bdd import given, parsers
+from pytest_bdd import given, parsers, then
 
 
 @pytest.fixture
@@ -24,3 +24,8 @@ def logged_in_as(user_type, login_as, page):
 @given("I am on the product catalog")
 def visit_product_catalog(page):
     page.goto("/products")
+
+
+@then(parsers.parse('I should see the product titled "{title}"'))
+def assert_product_title(page, title):
+    expect(page.get_by_role("heading", name=title, level=1)).to_be_visible()

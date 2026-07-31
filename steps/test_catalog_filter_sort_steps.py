@@ -76,3 +76,39 @@ def assert_price_order(page, order):
 def assert_catalog_page_loaded(page):
     expect(page.get_by_role("heading", name="All Products", level=1)).to_be_visible()
     expect(page.locator("article.product-item").first).to_be_visible()
+
+
+# --- Live search (combobox) ---
+
+
+@when(parsers.parse('I type "{query}" into the product search box'))
+def type_into_search_box(page, query):
+    page.locator("#product-search").fill(query)
+
+
+@then(parsers.parse('I should see search suggestions including "{title}"'))
+def assert_search_suggestion_visible(page, title):
+    expect(page.locator("#product-search-results").get_by_role("option").filter(has_text=title)).to_be_visible()
+
+
+@when(parsers.parse('I click the search suggestion "{title}"'))
+def click_search_suggestion(page, title):
+    page.locator("#product-search-results").get_by_role("option").filter(has_text=title).click()
+
+
+@when(parsers.parse('I request the search API with query "{query}"'))
+def request_search_api(playwright, base_url, scenario_context, query):
+    # Same isolated playwright.request pattern used for the BUG-SEC-005 PoC -
+    # a raw HTTP call, no browser needed, exercising the JSON contract directly.
+    request_context = playwright.request.new_context(base_url=base_url)
+    scenario_context["search_response"] = request_context.get(f"/api/products/search?q={query}")
+    scenario_context["search_request_context"] = request_context
+
+
+@then(parsers.parse('the JSON response should include a product titled "{title}"'))
+def assert_json_response_includes_title(scenario_context, title):
+    body = scenario_context["search_response"].json()
+    scenario_context["search_request_context"].dispose()
+
+    titles = [item["title"] for item in body["results"]]
+    assert title in titles, f"expected '{title}' in search results: {titles}"
