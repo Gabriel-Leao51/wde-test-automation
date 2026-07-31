@@ -4,6 +4,7 @@ from playwright.sync_api import expect
 from pytest_bdd import parsers, scenarios, then, when
 
 scenarios("client/purchase_flow.feature")
+scenarios("ui/toast_notifications.feature")
 
 
 @when(parsers.parse('I click "View Details" for the product "{product_title}"'))

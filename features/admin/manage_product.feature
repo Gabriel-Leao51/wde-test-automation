@@ -51,6 +51,7 @@ Feature: Manage Products - Admin Panel
         Then I should see a confirmation dialog to delete "Edited Test Mousepad"
         When I confirm the deletion
         Then the product "Edited Test Mousepad" should no longer be displayed in the product list
+        And I should see a success toast saying "Product deleted!"
 
     @validation @product @negative-path
     Scenario: Add a product with the required name field blank

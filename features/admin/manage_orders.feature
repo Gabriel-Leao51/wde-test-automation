@@ -16,3 +16,4 @@ Feature: Manage Orders - Admin Panel
         And I select the new status "Fulfilled" for this order
         And I click the "Update" button for this order
         Then the status "FULFILLED" should be displayed for this order
+        And I should see a success toast saying "Order status updated!"
