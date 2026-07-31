@@ -1,3 +1,5 @@
+import base64
+import mimetypes
 import re
 from datetime import datetime
 from pathlib import Path
@@ -15,6 +17,8 @@ class ProductsPage:
         self.add_new_product_button = page.locator("main").get_by_role("link", name="Add Product")
         self.product_title_input = page.locator("#title")
         self.product_image_input = page.locator("#image")
+        self.image_dropzone = page.locator("#image-upload-control")
+        self.image_preview = page.locator("#image-upload-control img")
         self.product_summary_input = page.locator("#summary")
         self.product_price_input = page.locator("#price")
         self.product_department_select = page.locator("#department")
@@ -105,6 +109,32 @@ class ProductsPage:
         day_cell = self.page.locator(f'.flatpickr-day[aria-label="{day_aria_label}"]')
         expect(day_cell).to_be_visible()
         day_cell.click()
+        return self
+
+    def drop_image_file(self, filename: str):
+        # Playwright has no built-in "drop a file" helper (unlike set_input_files
+        # for the native file-picker path), so the drop is simulated in-page: a
+        # real File is built from the fixture's bytes and dispatched as a native
+        # DragEvent, exercising the same dropzone code the browser would use for
+        # an actual drag-and-drop.
+        file_path = TEST_DATA_DIR / filename
+        encoded = base64.b64encode(file_path.read_bytes()).decode("ascii")
+        mime_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+
+        self.image_dropzone.evaluate(
+            """(element, { data, fileName, mimeType }) => {
+                const binary = atob(data);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                const file = new File([bytes], fileName, { type: mimeType });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                element.dispatchEvent(new DragEvent('drop', { dataTransfer, bubbles: true, cancelable: true }));
+            }""",
+            {"data": encoded, "fileName": filename, "mimeType": mime_type},
+        )
         return self
 
     def click_save_button(self):

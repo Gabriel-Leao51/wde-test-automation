@@ -56,6 +56,24 @@ Feature: Manage Products - Admin Panel
         Then the product "Edited Test Mousepad" should no longer be displayed in the product list
         And I should see a success toast saying "Product deleted!"
 
+    @crud @product @happy-path @xdist_group_product_crud
+    Scenario: Uploading a product image via drag and drop
+        When I click the "Add Product" button
+        And I fill in the add product form with the following data:
+            | Field       | Value                                    |
+            | title       | Drag and Drop Mousepad                   |
+            | summary     | A great mousepad for testing             |
+            | price       | 35                                       |
+            | department  | Office                                   |
+            | description | Ideal mousepad for automated testing     |
+        And I drag and drop "mousepad.jpg" onto the image upload dropzone
+        And I click the "Save" button
+        Then I should be redirected to the manage products page "/admin/products"
+        And the product "Drag and Drop Mousepad" should be visible in the product list with title and image
+        When I click the "Delete" button for the product titled "Drag and Drop Mousepad"
+        And I confirm the deletion
+        Then the product "Drag and Drop Mousepad" should no longer be displayed in the product list
+
     @validation @product @negative-path
     Scenario: Add a product with the required name field blank
         When I click the "Add Product" button

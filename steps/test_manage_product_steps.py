@@ -120,6 +120,14 @@ def assert_launch_date_field(products_page, expected_value):
     expect(products_page.product_launch_date_input).to_have_value(expected_value)
 
 
+# --- Steps: Drag and Drop Image Upload ---
+
+
+@when(parsers.parse('I drag and drop "{filename}" onto the image upload dropzone'))
+def drag_and_drop_image(products_page, filename):
+    products_page.drop_image_file(filename)
+
+
 # --- Steps: Validation (Required Field) ---
 
 
