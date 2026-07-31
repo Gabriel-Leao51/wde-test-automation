@@ -38,6 +38,7 @@ markers = [
     "localization: language selector / i18n scenarios",
     "catalog: product catalog filter/sort/search scenarios",
     "toast: toast notification scenarios",
+    "xss: cross-site scripting / HTML sanitization scenarios",
 ]
 playwright_visual_snapshots_path = "__snapshots__"
 

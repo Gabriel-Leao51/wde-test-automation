@@ -128,6 +128,46 @@ def drag_and_drop_image(products_page, filename):
     products_page.drop_image_file(filename)
 
 
+# --- Steps: Rich Text Editor / XSS Sanitization ---
+
+
+@when(parsers.parse('I format the product description as bold "{text}"'))
+def format_description_bold(products_page, text):
+    products_page.format_description_bold(text)
+
+
+@when(parsers.parse('I set the product description to the raw HTML "{html}"'))
+def set_description_html(products_page, html):
+    products_page.set_description_html(html)
+
+
+@when(parsers.parse('I view the customer product page for "{product_title}"'))
+def view_customer_product_page(products_page, product_title):
+    products_page.view_customer_product_page(product_title)
+
+
+@then(parsers.parse('the rendered product description should contain bold text "{text}"'))
+def assert_description_bold_text(products_page, text):
+    expect(products_page.rendered_description.locator("strong")).to_contain_text(text)
+
+
+@then(parsers.parse('the rendered product description should include the text "{text}"'))
+def assert_description_text(products_page, text):
+    expect(products_page.rendered_description).to_contain_text(text)
+
+
+@then(parsers.parse('the rendered product description should not contain a "{tag}" element'))
+@then(parsers.parse('the rendered product description should not contain an "{tag}" element'))
+def assert_description_lacks_tag(products_page, tag):
+    expect(products_page.rendered_description.locator(tag)).to_have_count(0)
+
+
+@then("the injected script should not have executed")
+def assert_script_did_not_execute(page):
+    executed = page.evaluate("() => window.xssMarker === true")
+    assert not executed, "the sanitizer failed to strip an executable payload"
+
+
 # --- Steps: Validation (Required Field) ---
 
 

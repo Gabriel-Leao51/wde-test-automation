@@ -40,6 +40,11 @@ Feature: Manage Products - Admin Panel
         And the product "Edited Test Mousepad" should be displayed in the product list with the updated title
         When I click the "View & Edit" button for the product titled "Edited Test Mousepad"
         Then the launch date field should read "2025-01-20"
+        When I format the product description as bold "important note"
+        And I click the "Save" button
+        Then I should be redirected to the manage products page "/admin/products"
+        When I view the customer product page for "Edited Test Mousepad"
+        Then the rendered product description should contain bold text "important note"
 
     @crud @product @happy-path @xdist_group_product_crud
     Scenario: Cancelling the delete confirmation keeps the product
@@ -73,6 +78,29 @@ Feature: Manage Products - Admin Panel
         When I click the "Delete" button for the product titled "Drag and Drop Mousepad"
         And I confirm the deletion
         Then the product "Drag and Drop Mousepad" should no longer be displayed in the product list
+
+    @crud @product @security @xss @happy-path @xdist_group_product_crud
+    Scenario: Stored XSS payloads in a product description are sanitized before saving
+        When I click the "Add Product" button
+        And I fill in the add product form with the following data:
+            | Field      | Value                         |
+            | title      | XSS Test Mousepad             |
+            | image      | mousepad.jpg                  |
+            | summary    | A great mousepad for testing  |
+            | price      | 35                            |
+            | department | Office                        |
+        And I set the product description to the raw HTML "<p>Safe <strong>bold</strong> text</p><script>window.xssMarker = true;</script><img src='x' onerror='window.xssMarker = true'>"
+        And I click the "Save" button
+        Then I should be redirected to the manage products page "/admin/products"
+        When I view the customer product page for "XSS Test Mousepad"
+        Then the rendered product description should include the text "Safe bold text"
+        And the rendered product description should not contain a "script" element
+        And the rendered product description should not contain an "img" element
+        And the injected script should not have executed
+        When I navigate to the manage products page "Manage Products"
+        And I click the "Delete" button for the product titled "XSS Test Mousepad"
+        And I confirm the deletion
+        Then the product "XSS Test Mousepad" should no longer be displayed in the product list
 
     @validation @product @negative-path
     Scenario: Add a product with the required name field blank

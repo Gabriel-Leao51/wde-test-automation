@@ -23,7 +23,12 @@ class ProductsPage:
         self.product_price_input = page.locator("#price")
         self.product_department_select = page.locator("#department")
         self.product_launch_date_input = page.locator("#launchDate")
-        self.product_description_input = page.locator("#description")
+        # The real <textarea id="description"> is a hidden field kept in sync by
+        # the Quill editor's JS - it isn't user-facing and Playwright's fill()
+        # requires a visible/actionable target, so scenarios interact with the
+        # rendered Quill contenteditable surface instead.
+        self.product_description_input = page.locator("#description-editor .ql-editor")
+        self.rendered_description = page.locator("#product-description")
         self.save_button = page.get_by_role("button", name="Save")
         self.add_to_cart_button = page.get_by_role("button", name="Add to Cart")
         self.delete_confirm_dialog = page.locator("#delete-confirm-dialog")
@@ -93,6 +98,14 @@ class ProductsPage:
     def fill_edit_product_form(self, product_data: dict[str, str]):
         return self.fill_product_form(product_data)
 
+    def format_description_bold(self, text: str):
+        self.product_description_input.click()
+        self.page.keyboard.press("Control+A")
+        self.page.keyboard.type(text)
+        self.page.keyboard.press("Control+A")
+        self.page.locator(".ql-toolbar button.ql-bold").click()
+        return self
+
     def set_launch_date(self, day_aria_label: str):
         # Opens the self-hosted flatpickr widget and clicks a real, locatable
         # day cell - not a native <input type="date"> picker, which Playwright
@@ -109,6 +122,23 @@ class ProductsPage:
         day_cell = self.page.locator(f'.flatpickr-day[aria-label="{day_aria_label}"]')
         expect(day_cell).to_be_visible()
         day_cell.click()
+        return self
+
+    def set_description_html(self, html: str):
+        # Simulates an attacker bypassing the Quill toolbar entirely (e.g. via
+        # devtools or a modified client) and injecting arbitrary HTML directly
+        # into the DOM that becomes the submitted payload - the realistic
+        # threat model for a client-side rich text editor, and the only way to
+        # reach the server's sanitizer with markup the toolbar itself would
+        # never produce.
+        self.page.evaluate(
+            """(html) => {
+                const editor = document.querySelector('#description-editor .ql-editor');
+                editor.innerHTML = html;
+                editor.dispatchEvent(new InputEvent('input', { bubbles: true }));
+            }""",
+            html,
+        )
         return self
 
     def drop_image_file(self, filename: str):
@@ -147,6 +177,16 @@ class ProductsPage:
         expect(button).to_be_visible()
         button.click()
         expect(self.page).to_have_url(re.compile(r".*/admin/products/(?!new)"))
+        return self
+
+    def view_customer_product_page(self, product_title: str):
+        # The admin product list renders "View & Edit"/"Delete" instead of a
+        # "View Details" link (product-item.ejs branches on locals.isAdmin), so
+        # the customer-facing page is reached by lifting the real product id
+        # off the "View & Edit" link and navigating there directly.
+        edit_href = self.edit_product_button(product_title).get_attribute("href")
+        product_id = edit_href.rsplit("/", 1)[-1]
+        self.page.goto(f"/products/{product_id}")
         return self
 
     def click_delete_product_button(self, product_title: str) -> str:
