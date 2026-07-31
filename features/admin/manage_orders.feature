@@ -17,3 +17,10 @@ Feature: Manage Orders - Admin Panel
         And I click the "Update" button for this order
         Then the status "FULFILLED" should be displayed for this order
         And I should see a success toast saying "Order status updated!"
+
+    @order @happy-path
+    Scenario: Sorting the orders table by clicking a column header
+        When I click the "Status" column header
+        Then the orders table rows should be sorted by "status" in ascending order
+        When I click the "Status" column header
+        Then the orders table rows should be sorted by "status" in descending order

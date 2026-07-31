@@ -16,7 +16,7 @@ class OrdersPage:
         hidden_input = self.page.locator(
             f'input[type="hidden"][name="orderid"][value="{order_id}"]'
         )
-        return self.page.locator("article.order-item").filter(has=hidden_input)
+        return self.page.locator("tr.order-row").filter(has=hidden_input)
 
     @staticmethod
     def _status_select(order_container: Locator):

@@ -54,3 +54,20 @@ def click_update_for_order(orders_page, button_text):
 @then(parsers.parse('the status "{expected_status}" should be displayed for this order'))
 def assert_order_status(orders_page, expected_status):
     orders_page.assert_order_status_for_current_order(expected_status)
+
+
+# --- Sortable table ---
+
+
+@when(parsers.parse('I click the "{column_label}" column header'))
+def click_column_header(page, column_label):
+    page.get_by_role("columnheader", name=column_label).click()
+
+
+@then(parsers.parse('the orders table rows should be sorted by "{column}" in {order} order'))
+def assert_orders_table_sorted(page, column, order):
+    values = page.locator("#orders-table tbody tr").evaluate_all(
+        "(rows, column) => rows.map((row) => row.dataset[column])", column
+    )
+    expected = sorted(values, reverse=(order == "descending"))
+    assert values == expected, f"orders table not sorted by {column} ({order}): {values}"
