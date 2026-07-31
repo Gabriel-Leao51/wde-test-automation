@@ -82,6 +82,26 @@ def assert_product_edited(products_page, product_title):
 # --- Steps: Delete Product ---
 
 
+@then(parsers.parse('I should see a confirmation dialog to delete "{product_title}"'))
+def assert_delete_confirmation_dialog(products_page, product_title):
+    products_page.assert_delete_confirmation_dialog_visible(product_title)
+
+
+@when("I confirm the deletion")
+def confirm_deletion(products_page):
+    products_page.confirm_delete()
+
+
+@when("I cancel the deletion")
+def cancel_deletion(products_page):
+    products_page.cancel_delete()
+
+
+@then(parsers.parse('the product "{product_title}" should still be displayed in the product list'))
+def assert_product_still_displayed(products_page, product_title):
+    expect(products_page.product_list_item_title(product_title)).to_be_visible()
+
+
 @then(parsers.parse('the product "{product_title}" should no longer be displayed in the product list'))
 def assert_product_deleted(products_page, scenario_context, product_title):
     products_page.assert_product_deleted_successfully(scenario_context["deleted_product_id"])

@@ -20,6 +20,9 @@ class ProductsPage:
         self.product_description_input = page.locator("#description")
         self.save_button = page.get_by_role("button", name="Save")
         self.add_to_cart_button = page.get_by_role("button", name="Add to Cart")
+        self.delete_confirm_dialog = page.locator("#delete-confirm-dialog")
+        self.delete_confirm_button = page.locator("#delete-confirm-button")
+        self.delete_cancel_button = page.locator("#delete-cancel-button")
 
     # --- Elements (parameterized) ---
 
@@ -108,6 +111,16 @@ class ProductsPage:
         button.click()
         return product_id
 
+    def confirm_delete(self):
+        expect(self.delete_confirm_button).to_be_visible()
+        self.delete_confirm_button.click()
+        return self
+
+    def cancel_delete(self):
+        expect(self.delete_cancel_button).to_be_visible()
+        self.delete_cancel_button.click()
+        return self
+
     def click_view_details_button(self, product_title: str):
         button = self.view_details_button(product_title)
         expect(button).to_be_visible()
@@ -137,4 +150,9 @@ class ProductsPage:
 
     def assert_product_deleted_successfully(self, product_id: str):
         expect(self.page.locator(f'[data-productid="{product_id}"]')).to_have_count(0)
+        return self
+
+    def assert_delete_confirmation_dialog_visible(self, product_title: str):
+        expect(self.delete_confirm_dialog).to_be_visible()
+        expect(self.delete_confirm_dialog).to_contain_text(product_title)
         return self

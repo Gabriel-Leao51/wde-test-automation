@@ -39,8 +39,17 @@ Feature: Manage Products - Admin Panel
         And the product "Edited Test Mousepad" should be displayed in the product list with the updated title
 
     @crud @product @happy-path @xdist_group_product_crud
+    Scenario: Cancelling the delete confirmation keeps the product
+        When I click the "Delete" button for the product titled "Edited Test Mousepad"
+        Then I should see a confirmation dialog to delete "Edited Test Mousepad"
+        When I cancel the deletion
+        Then the product "Edited Test Mousepad" should still be displayed in the product list
+
+    @crud @product @happy-path @xdist_group_product_crud
     Scenario: Successfully delete an existing product
         When I click the "Delete" button for the product titled "Edited Test Mousepad"
+        Then I should see a confirmation dialog to delete "Edited Test Mousepad"
+        When I confirm the deletion
         Then the product "Edited Test Mousepad" should no longer be displayed in the product list
 
     @validation @product @negative-path
