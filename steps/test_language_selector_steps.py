@@ -3,10 +3,8 @@ from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("localization/language_selector.feature")
 
-
-@given("I am on the product catalog")
-def visit_product_catalog(page):
-    page.goto("/products")
+# "Given I am on the product catalog" is defined in steps/conftest.py (shared
+# across step files, same as the "logged in as" step).
 
 
 @given(parsers.parse('the language is set to "{lang}"'))

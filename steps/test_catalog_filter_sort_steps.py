@@ -10,9 +10,28 @@ MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
 DB_NAME = "online-shop"
 
 
+# "Given I am on the product catalog" is defined in steps/conftest.py (shared
+# across step files, same pattern as the "logged in as" step).
+
+
 @when(parsers.parse('I visit the product catalog filtered by department "{department}"'))
 def visit_catalog_filtered_by_department(page, department):
     page.goto(f"/products?department={department}")
+
+
+@when(parsers.parse('I select "{option_label}" from the department filter'))
+def select_department_filter(page, option_label):
+    page.locator("#department-filter").select_option(label=option_label)
+
+
+@when(parsers.parse('I select "{option_label}" from the sort dropdown'))
+def select_sort_dropdown(page, option_label):
+    page.locator("#sort-select").select_option(label=option_label)
+
+
+@when(parsers.parse('I click the "{button_text}" button'))
+def click_button(page, button_text):
+    page.locator("button, .btn, a.btn").filter(has_text=button_text).first.click()
 
 
 @when(parsers.parse('I visit the product catalog sorted by "{sort}"'))

@@ -19,3 +19,8 @@ def logged_in_as(user_type, login_as, page):
 
     if user_type.lower() == "customer":
         expect(page.locator("#main-header").get_by_role("link", name="Orders")).to_be_visible()
+
+
+@given("I am on the product catalog")
+def visit_product_catalog(page):
+    page.goto("/products")

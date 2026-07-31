@@ -30,3 +30,15 @@ Feature: Product Catalog - Filtering and Sorting
   Scenario: An unrecognized sort value is ignored rather than breaking the page
     When I visit the product catalog sorted by "not_a_real_sort"
     Then the product catalog page should load successfully
+
+  Scenario: Filtering the catalog via the department dropdown
+    Given I am on the product catalog
+    When I select "Sports" from the department filter
+    And I click the "Filter" button
+    Then only products from the "Sports" department should be listed
+
+  Scenario: Sorting the catalog via the sort dropdown
+    Given I am on the product catalog
+    When I select "Price: Low to High" from the sort dropdown
+    And I click the "Filter" button
+    Then the listed products should be in ascending price order
