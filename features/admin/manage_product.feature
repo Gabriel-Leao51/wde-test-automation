@@ -34,9 +34,12 @@ Feature: Manage Products - Admin Panel
             | summary     | Edited Test Mousepad Summary                   |
             | price       | 40                                             |
             | description | Edited description of the ideal test mousepad |
+        And I set the launch date to "January 20, 2025" using the date picker
         And I click the "Save" button
         Then I should be redirected to the manage products page "/admin/products"
         And the product "Edited Test Mousepad" should be displayed in the product list with the updated title
+        When I click the "View & Edit" button for the product titled "Edited Test Mousepad"
+        Then the launch date field should read "2025-01-20"
 
     @crud @product @happy-path @xdist_group_product_crud
     Scenario: Cancelling the delete confirmation keeps the product

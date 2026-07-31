@@ -107,6 +107,19 @@ def assert_product_deleted(products_page, scenario_context, product_title):
     products_page.assert_product_deleted_successfully(scenario_context["deleted_product_id"])
 
 
+# --- Steps: Date Picker ---
+
+
+@when(parsers.parse('I set the launch date to "{day_aria_label}" using the date picker'))
+def set_launch_date(products_page, day_aria_label):
+    products_page.set_launch_date(day_aria_label)
+
+
+@then(parsers.parse('the launch date field should read "{expected_value}"'))
+def assert_launch_date_field(products_page, expected_value):
+    expect(products_page.product_launch_date_input).to_have_value(expected_value)
+
+
 # --- Steps: Validation (Required Field) ---
 
 

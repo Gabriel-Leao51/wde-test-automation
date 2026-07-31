@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from pathlib import Path
 
 from playwright.sync_api import Page, expect
@@ -17,6 +18,7 @@ class ProductsPage:
         self.product_summary_input = page.locator("#summary")
         self.product_price_input = page.locator("#price")
         self.product_department_select = page.locator("#department")
+        self.product_launch_date_input = page.locator("#launchDate")
         self.product_description_input = page.locator("#description")
         self.save_button = page.get_by_role("button", name="Save")
         self.add_to_cart_button = page.get_by_role("button", name="Add to Cart")
@@ -86,6 +88,24 @@ class ProductsPage:
 
     def fill_edit_product_form(self, product_data: dict[str, str]):
         return self.fill_product_form(product_data)
+
+    def set_launch_date(self, day_aria_label: str):
+        # Opens the self-hosted flatpickr widget and clicks a real, locatable
+        # day cell - not a native <input type="date"> picker, which Playwright
+        # (and most automation tools) can't drive consistently across browsers.
+        # flatpickr opens on today's month when the field is empty, so the
+        # calendar must be navigated to the target month/year first rather
+        # than assuming the target day is already visible.
+        target = datetime.strptime(day_aria_label, "%B %d, %Y")
+        self.product_launch_date_input.click()
+        self.page.get_by_role("combobox", name="Month").select_option(label=target.strftime("%B"))
+        year_input = self.page.get_by_role("spinbutton", name="Year")
+        year_input.fill(str(target.year))
+        year_input.press("Enter")
+        day_cell = self.page.locator(f'.flatpickr-day[aria-label="{day_aria_label}"]')
+        expect(day_cell).to_be_visible()
+        day_cell.click()
+        return self
 
     def click_save_button(self):
         expect(self.save_button).to_be_visible()
