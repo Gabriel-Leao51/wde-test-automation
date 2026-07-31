@@ -39,6 +39,7 @@ markers = [
     "catalog: product catalog filter/sort/search scenarios",
     "toast: toast notification scenarios",
     "xss: cross-site scripting / HTML sanitization scenarios",
+    "invoice: PDF invoice download scenarios",
 ]
 playwright_visual_snapshots_path = "__snapshots__"
 
