@@ -41,6 +41,9 @@ jobs:
           STRIPE_KEY=sk_test_ci_placeholder
           APP_URL=http://localhost:3000
           PORT=3000
+          SMTP_HOST=mailpit
+          SMTP_PORT=1025
+          MAIL_FROM=no-reply@wde-shop.test
           EOF
 
       - name: Start WDE app stack (Docker Compose)
