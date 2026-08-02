@@ -38,6 +38,16 @@ def base_url():
 
 
 @pytest.fixture(scope="session")
+def mailpit_url():
+    """Mailpit's own HTTP API/UI origin (see ../wde/docker-compose.yml) - a
+    separate port from the app itself, so it needs its own base url rather
+    than reusing `base_url`. Set MAILPIT_BASE_URL to point at a different
+    environment (e.g. in CI).
+    """
+    return os.environ.get("MAILPIT_BASE_URL", "http://localhost:8025")
+
+
+@pytest.fixture(scope="session")
 def users():
     with open(TEST_DATA_DIR / "users.json", encoding="utf-8") as f:
         return json.load(f)

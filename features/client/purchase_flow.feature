@@ -19,3 +19,4 @@ Feature: Customer E2E Purchase Flow
     Then I should be redirected to the external Stripe payment page
     When I fill in the Stripe test card details and confirm payment
     Then I should be redirected to the order success page
+    And I should receive an order confirmation email in Mailpit

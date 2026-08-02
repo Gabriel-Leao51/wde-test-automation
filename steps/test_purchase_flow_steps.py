@@ -53,3 +53,40 @@ def pay_with_stripe_test_card(stripe_checkout_page):
 @then("I should be redirected to the order success page")
 def assert_redirected_to_order_success(page):
     expect(page).to_have_url(re.compile(r".*/orders/success"), timeout=20000)
+
+
+@then("I should receive an order confirmation email in Mailpit")
+def assert_order_confirmation_email(page, playwright, mailpit_url, users):
+    # The success page URL carries the just-placed order's real id
+    # (?orderId=...), which the confirmation email's subject also embeds -
+    # matching on both the id and the recipient is enough to be sure this is
+    # the email this scenario's own purchase triggered, not a stray message
+    # left over from a concurrently-running worker.
+    order_id_match = re.search(r"orderId=([0-9a-fA-F]{24})", page.url)
+    assert order_id_match, f"success page URL did not include an orderId: {page.url}"
+    order_id = order_id_match.group(1)
+
+    customer_email = users["customer"]["email"]
+
+    request_context = playwright.request.new_context(base_url=mailpit_url)
+    try:
+        # Mailpit delivers over real SMTP, so the message may not be indexed
+        # by its API yet the instant the success page renders - poll briefly
+        # rather than asserting on the very first read.
+        matching = []
+        for _ in range(10):
+            response = request_context.get("/api/v1/messages")
+            body = response.json()
+            matching = [
+                message
+                for message in body["messages"]
+                if order_id in message["Subject"]
+                and any(recipient["Address"] == customer_email for recipient in message["To"])
+            ]
+            if matching:
+                break
+            page.wait_for_timeout(500)
+    finally:
+        request_context.dispose()
+
+    assert matching, f"no confirmation email found in Mailpit for order {order_id} to {customer_email}"
