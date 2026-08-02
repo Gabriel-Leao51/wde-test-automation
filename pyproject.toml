@@ -40,6 +40,7 @@ markers = [
     "toast: toast notification scenarios",
     "xss: cross-site scripting / HTML sanitization scenarios",
     "invoice: PDF invoice download scenarios",
+    "otp: one-time-code login scenarios",
 ]
 playwright_visual_snapshots_path = "__snapshots__"
 

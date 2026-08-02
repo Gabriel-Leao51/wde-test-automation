@@ -7,6 +7,7 @@ import pytest
 from pages.cart_page import CartPage
 from pages.login_page import LoginPage
 from pages.orders_page import OrdersPage
+from pages.otp_login_page import OtpLoginPage
 from pages.products_page import ProductsPage
 from pages.stripe_checkout_page import StripeCheckoutPage
 
@@ -76,6 +77,11 @@ def orders_page(page):
 @pytest.fixture
 def stripe_checkout_page(page):
     return StripeCheckoutPage(page)
+
+
+@pytest.fixture
+def otp_login_page(page):
+    return OtpLoginPage(page)
 
 
 @pytest.fixture
