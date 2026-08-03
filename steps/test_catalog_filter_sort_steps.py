@@ -48,6 +48,12 @@ def assert_only_department_products_listed(page, department):
     expected_titles = {doc["title"] for doc in client[DB_NAME].products.find({"department": department})}
     client.close()
 
+    # The preceding step (a "Filter" button click or a direct page.goto) triggers
+    # a full navigation; all_inner_texts() takes a one-shot synchronous snapshot
+    # with no auto-retry, so reading it before the new page has settled can hit
+    # "Execution context was destroyed" mid-navigation (seen on WebKit's timing,
+    # not Chromium/Firefox's). Wait for real content to be visible first.
+    expect(page.locator("article.product-item").first).to_be_visible()
     rendered_titles = set(page.locator("article.product-item h2").all_inner_texts())
 
     assert rendered_titles, "no products rendered - department filter may be broken"
@@ -59,6 +65,9 @@ def assert_only_department_products_listed(page, department):
 
 @then(parsers.parse("the listed products should be in {order} alphabetical order"))
 def assert_alphabetical_order(page, order):
+    # See the comment in assert_only_department_products_listed - same
+    # post-navigation race with all_inner_texts() being a one-shot read.
+    expect(page.locator("article.product-item").first).to_be_visible()
     titles = page.locator("article.product-item h2").all_inner_texts()
     expected = sorted(titles, reverse=(order == "descending"))
     assert titles == expected, f"titles not in {order} alphabetical order: {titles}"
@@ -66,6 +75,7 @@ def assert_alphabetical_order(page, order):
 
 @then(parsers.parse("the listed products should be in {order} price order"))
 def assert_price_order(page, order):
+    expect(page.locator("article.product-item").first).to_be_visible()
     price_texts = page.locator("article.product-item .product-item-price").all_inner_texts()
     prices = [float(text.lstrip("$")) for text in price_texts]
     expected = sorted(prices, reverse=(order == "descending"))

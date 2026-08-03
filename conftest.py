@@ -25,6 +25,8 @@ def pytest_bdd_apply_tag(tag, function):
     """
     if tag == "xdist_group_product_crud":
         return pytest.mark.xdist_group(name="product_crud")(function)
+    if tag == "xdist_group_otp_login":
+        return pytest.mark.xdist_group(name="otp_login")(function)
     return None
 
 

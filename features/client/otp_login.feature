@@ -5,7 +5,7 @@ Feature: OTP Login
   I want to log in using a one-time code emailed to me
   As an alternative to typing my password
 
-  @auth @otp @happy-path
+  @auth @otp @happy-path @xdist_group_otp_login
   Scenario: Customer logs in successfully using an emailed one-time code
     Given I am on the OTP login request page
     When I request a login code for "user2@example.com"
@@ -14,7 +14,7 @@ Feature: OTP Login
     And I submit the retrieved login code
     Then I should be logged in
 
-  @auth @otp @security @happy-path
+  @auth @otp @security @happy-path @xdist_group_otp_login
   Scenario: A login code becomes invalid after too many wrong attempts
     Given I am on the OTP login request page
     When I request a login code for "user2@example.com"
