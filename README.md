@@ -16,14 +16,19 @@ The project covers different testing areas and types:
 
 - **Functional Tests (Admin Panel):**
   - **Login:** Admin panel authentication.
-  - **Product Management:** Full CRUD (Add, Edit, Delete) - Happy Path.
+  - **Product Management:** Full CRUD (Add, Edit, Delete) - Happy Path, including drag-and-drop image upload, a date picker for the product's launch date, and a rich text editor for the description.
   - **Product Management:** Required field validation (Name/Title) - Unhappy Path.
-  - **Order Management:** Changing an existing order's status.
+  - **Product Management:** Stored XSS payloads in the rich text description are sanitized server-side before saving - Security.
+  - **Order Management:** Changing an existing order's status, sorting the orders table by column.
 - **Security Tests (Admin Panel):**
   - **Authentication:** Attempts to access admin areas by unauthenticated users.
   - **Authorization:** Attempts to access admin areas by logged-in users with a "customer" profile (unauthorized).
-- **E2E Test (Customer Flow):**
-  - **Purchase Journey:** Customer login, product search, adding to cart, checkout, filling in the test card on Stripe's page, and confirmation through to the order success page.
+- **Catalog:** Department filter, name/price sort (both directions), live search combobox (suggestions-as-you-type, JSON API contract).
+- **Localization:** EN/PT-BR language selector - nav chrome and product catalog content both switch.
+- **E2E Tests (Customer Flow):**
+  - **Purchase Journey:** Customer login, product search, adding to cart, checkout, filling in the test card on Stripe's page, confirmation through to the order success page, and the order confirmation email landing in Mailpit with the correct order details.
+  - **OTP Login:** Requesting a one-time code, retrieving it from Mailpit, and logging in with it - plus a paired scenario proving the 5-attempt lockout is a real server-side control, not just a UI message.
+  - **PDF Invoice Download:** Downloading a real PDF invoice for a past order, and confirming a bad/nonexistent order id 404s instead of erroring.
 - **Visual Regression:**
   - Screenshot vs. approved baseline comparison across 5 key pages: login, product catalog, product details, admin product panel, and the 401 error page.
 
@@ -50,11 +55,14 @@ The project covers different testing areas and types:
 ├── conftest.py                 # base_url, Page Object fixtures, and login
 ├── features/
 │   ├── admin/                  # Login, authentication, authorization, products, orders features
-│   ├── client/                 # Purchase flow feature
+│   ├── catalog/                 # Department filter, sort, live search
+│   ├── client/                  # Purchase flow, OTP login, order invoice download
+│   ├── localization/            # EN/PT-BR language selector
 │   ├── security/                # Advanced security features (hardening)
+│   ├── ui/                      # Toast notifications
 │   └── visual/                  # Visual regression feature
 ├── steps/                      # Step definitions (pytest-bdd) + conftest.py with shared steps
-├── pages/                      # Page Objects (LoginPage, ProductsPage, CartPage, OrdersPage, StripeCheckoutPage)
+├── pages/                      # Page Objects (LoginPage, ProductsPage, CartPage, OrdersPage, OtpLoginPage, StripeCheckoutPage)
 ├── __snapshots__/              # Visual regression baselines (generated on Linux — see section 7.9)
 ├── test_data/                  # Data fixtures (users.json, orders.json, mousepad.jpg)
 ├── utils/                      # Helper functions (helpers.py)
@@ -138,6 +146,12 @@ By default the suite targets `http://localhost:3000`. To run against a different
 WDE_BASE_URL=http://other-host:3000 uv run pytest
 ```
 
+Order confirmation email and OTP login scenarios also read from Mailpit's REST API (the `wde` repository's `docker-compose.yml` runs it as a service, exposing the API at `127.0.0.1:8025`). Default is `http://localhost:8025`; override with:
+
+```bash
+MAILPIT_BASE_URL=http://other-host:8025 uv run pytest
+```
+
 ### 7.7. Reports and failure artifacts
 
 Each run generates a self-contained HTML report at `playwright-report/report.html`. Failures automatically retain trace, video, and screenshot in `test-results/`, recoverable for local debugging:
@@ -181,8 +195,9 @@ The workflow is configured in `.github/workflows/playwright-tests.yml` and perfo
 - **Target application:** Checks out the `wde` repository as a sibling directory and brings up the stack via `docker compose up -d --build`, waiting for the health check before proceeding.
 - **Multi-browser matrix:** runs the full job 3 times in parallel (Chromium, Firefox, WebKit), each with its own isolated Docker stack (avoids concurrency interference between browsers). `fail-fast: false` — a failure in one browser doesn't cancel the others.
 - **Installation:** `uv sync` + `playwright install --with-deps <matrix-browser>`.
-- **Running tests:** Runs the core subset (`login`, `authentication`, `authorization`, `manage_product`) in parallel via `pytest-xdist` (see section 7.4) — `-n 4` for Chromium, `-n 2` for Firefox/WebKit (heavier processes, had intermittent timeouts at `-n 4` during local validation). Just like in the original Cypress version, `manage_orders.feature` and `purchase_flow.feature` are left out of the standard pipeline — both create persistent orders in the database on every run, which is undesirable in a CI pipeline.
+- **Running tests:** Runs the core subset (`login`, `authentication`, `authorization`, `manage_product`, `catalog_filter_sort`, `otp_login`, `order_invoice`) in parallel via `pytest-xdist` (see section 7.4) — `-n 4` for Chromium, `-n 2` for Firefox/WebKit (heavier processes, had intermittent timeouts at `-n 4` during local validation). Just like in the original Cypress version, `manage_orders.feature` and `purchase_flow.feature` are left out of the standard pipeline — both create persistent orders in the database on every run, which is undesirable in a CI pipeline. The other three files added in Phase 10 don't have that problem (OTP records self-delete on success/lockout, invoice scenarios only read existing orders, catalog scenarios only filter/search), so they run on every push.
 - **Visual regression:** runs as an extra step, only on the Chromium leg of the matrix (`-m visual`, see section 7.9), comparing against the Linux baselines versioned in `__snapshots__/`.
+- **Language selector:** also Chromium-only, plain text assertions with no browser-specific rendering risk.
 - **Known bugs as `@xfail`:** The 3 scenarios in `authorization.feature` documenting `BUG-AUTH-001`/`BUG-AUTH-002` are tagged `@xfail` (with `xfail_strict` enabled). This lets the pipeline report success normally while still running and tracking these scenarios — if either bug is fixed, the corresponding scenario turns into an `XPASS` and breaks the build, flagging the regression instead of it slipping by unnoticed.
 - **Artifact Upload:** Makes the HTML report and failure artifacts (`playwright-report/`, `test-results/`) available as a build artifact in GitHub Actions.
 
@@ -270,4 +285,6 @@ Detailed Report: [BUG-SEC-005 Report](docs/bugs/BUG-SEC-005.md)
 
 See the "Phase 9" section of [ROADMAP.md](ROADMAP.md) for the full list of improvements enabled by the Playwright migration. All items are now complete: multi-browser matrix (Chromium/Firefox/WebKit) in CI, parallel execution via `pytest-xdist`, full Stripe test checkout, lightweight API coverage via `playwright.request` (used in the security tests), and visual regression (`features/visual/`, section 7.9).
 
-See [ROADMAP.md](ROADMAP.md)'s "Phase 10" for the current initiative: converting this suite to English (this document included), a real EN/PT-BR language selector in the app itself, a catalog overhaul (departments, filter, sort, search), a further set of checklist-driven UI features, and email/OTP integration.
+See [ROADMAP.md](ROADMAP.md)'s "Phase 10" for the most recent completed initiative: converting this suite to English (this document included), a real EN/PT-BR language selector in the app itself, a catalog overhaul (departments, filter, sort, search), a further set of checklist-driven UI features (confirmation modal, toasts, sortable table, date picker, drag-and-drop upload, rich text editor with stored-XSS sanitization, PDF invoice download), and full email/OTP integration (Mailpit, order confirmation email, OTP login with a real lockout). All tracks complete and CI-green.
+
+Possible future work: bring `manage_orders.feature` and `purchase_flow.feature` into CI behind a dedicated cleanup step (delete the orders they create after each run) instead of excluding them outright; add a scheduled nightly run of the full suite (including the currently CI-excluded files) to catch drift between runs.
