@@ -7,7 +7,7 @@ Feature: Language Selector
 
   Scenario Outline: Switching the language via the nav selector updates visible text
     Given I am on the product catalog
-    When I click the "<language_code>" language link
+    When I select "<language_code>" from the language dropdown
     Then the navigation should show "<shop_label>" as the shop link
     And the product catalog heading should read "<catalog_heading>"
 

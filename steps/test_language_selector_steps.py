@@ -12,9 +12,9 @@ def set_language_given(set_language, lang):
     set_language(lang)
 
 
-@when(parsers.parse('I click the "{language_code}" language link'))
-def click_language_link(page, language_code):
-    page.locator("#main-header").get_by_role("link", name=language_code, exact=True).click()
+@when(parsers.parse('I select "{language_code}" from the language dropdown'))
+def select_language_option(page, language_code):
+    page.locator("#main-header .lang-select").select_option(value=language_code.lower())
 
 
 @then(parsers.parse('the navigation should show "{shop_label}" as the shop link'))
