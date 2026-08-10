@@ -14,7 +14,9 @@ def set_language_given(set_language, lang):
 
 @when(parsers.parse('I select "{language_code}" from the language dropdown'))
 def select_language_option(page, language_code):
-    page.locator("#main-header .lang-select").select_option(value=language_code.lower())
+    header = page.locator("#main-header")
+    header.locator(".lang-trigger").click()
+    header.locator(f'a[href="/lang/{language_code.lower()}"]').click()
 
 
 @then(parsers.parse('the navigation should show "{shop_label}" as the shop link'))
